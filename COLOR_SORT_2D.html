@@ -1,0 +1,1852 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>COLOR SORT 2D - PREMIUM NEON</title>
+    <style>
+        *, *::before, *::after {
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg-color: #0b0d16;
+            --panel-bg: #141729;
+            --bottle-border: #4e5578;
+            --player-color: #00f2fe;
+            --cpu-color: #ff416c;
+            
+            /* 極彩色ネオンカラー */
+            --color-red: #ff3366;
+            --color-blue: #00e5ff;
+            --color-green: #00ff66;
+            --color-yellow: #ffea00;
+            --color-orange: #ff9100;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: white;
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 0;
+            padding: 8px;
+            min-height: 100vh;
+            user-select: none;
+            -webkit-user-select: none;
+            overflow-x: hidden;
+        }
+
+        /* ⚙️ 環境設定モーダル */
+        .settings-icon {
+            cursor: pointer;
+            background: rgba(255,255,255,0.08);
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            border: 1px solid rgba(255,255,255,0.15);
+            transition: background 0.2s, transform 0.2s;
+            font-size: 20px;
+        }
+        .settings-icon:hover {
+            background: rgba(255,255,255,0.2);
+            transform: rotate(45deg);
+        }
+
+        .title-settings-pos {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            z-index: 1100;
+        }
+
+        #settings-modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.85);
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+        }
+        .modal-content {
+            background: #191c33;
+            border: 2px solid #3f51b5;
+            border-radius: 16px;
+            padding: 24px;
+            width: 90%;
+            max-width: 320px;
+            box-shadow: 0 0 25px rgba(63,81,181,0.5);
+        }
+        .modal-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 20px;
+            text-align: center;
+            border-bottom: 1px solid #3f51b5;
+            padding-bottom: 8px;
+        }
+        .volume-group {
+            margin-bottom: 20px;
+        }
+        .volume-group label {
+            display: block;
+            font-size: 13px;
+            margin-bottom: 6px;
+            color: #b0b7d4;
+        }
+        .volume-group input[type="range"] {
+            width: 100%;
+            accent-color: #00e5ff;
+        }
+        .close-modal-btn {
+            width: 100%;
+            background: #3f51b5;
+            border: none;
+            color: white;
+            padding: 10px;
+            border-radius: 6px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        /* 🌌 スタート画面 */
+        #start-screen {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: radial-gradient(circle at center, #11142e 0%, #05060b 100%);
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-between;
+            padding: 40px 20px;
+        }
+
+        .neon-title {
+            font-size: 38px;
+            font-weight: 900;
+            text-align: center;
+            letter-spacing: 2px;
+            text-shadow: 0 0 10px rgba(255,255,255,0.2), 0 0 20px #3f51b5, 0 0 40px #00e5ff;
+            line-height: 1.2;
+        }
+        .neon-title span {
+            color: var(--color-blue);
+            animation: pulse-glow 2.5s infinite alternate;
+        }
+
+        @keyframes pulse-glow {
+            0% { text-shadow: 0 0 10px #00e5ff; color: #00e5ff; }
+            100% { text-shadow: 0 0 25px #ff3366, 0 0 40px #ff3366; color: #ff3366; }
+        }
+
+        .title-giant-art {
+            position: relative;
+            width: 280px;
+            height: 260px;
+            margin: 15px 0;
+        }
+        .art-glow-base {
+            position: absolute;
+            width: 180px;
+            height: 180px;
+            background: radial-gradient(circle, rgba(0, 229, 255, 0.15) 0%, transparent 70%);
+            top: 40px; left: 50%;
+            transform: translateX(-50%);
+            filter: blur(10px);
+            z-index: 0;
+        }
+        .vessel {
+            position: absolute;
+            border: 2px solid rgba(255,255,255,0.4);
+            border-radius: 0 0 20px 20px;
+            background: linear-gradient(to top, rgba(255,255,255,0.03), rgba(255,255,255,0.08));
+            display: flex;
+            flex-direction: column-reverse;
+            overflow: hidden;
+            box-shadow: inset 0 0 12px rgba(255,255,255,0.1);
+        }
+        .vessel::before {
+            content: '';
+            position: absolute;
+            top: 0; left: -10%; width: 120%; height: 5px;
+            background: rgba(255,255,255,0.6);
+            border-radius: 3px;
+        }
+        .vessel-fluid {
+            width: 100%;
+            height: 75%;
+            filter: drop-shadow(0 0 8px linear-gradient);
+            background-size: 100% 200%;
+        }
+
+        .vs-back-1 { left: 45px; bottom: 110px; width: 42px; height: 110px; border-color: var(--color-blue); box-shadow: 0 0 15px rgba(0,229,255,0.4); }
+        .vs-back-1 .vessel-fluid { background: linear-gradient(to top, #00b3cc, #00e5ff); }
+
+        .vs-back-2 { right: 45px; bottom: 110px; width: 42px; height: 110px; border-color: var(--color-orange); box-shadow: 0 0 15px rgba(255,145,0,0.4); }
+        .vs-back-2 .vessel-fluid { background: linear-gradient(to top, #ff9100, #ffea00); height: 60%; }
+
+        .vs-mid-1 { left: 15px; bottom: 40px; width: 44px; height: 120px; border-color: var(--color-red); box-shadow: 0 0 18px rgba(255,51,102,0.4); z-index: 2; }
+        .vs-mid-1 .vessel-fluid { background: linear-gradient(to top, #ff1a53, #ff3366); height: 85%; }
+
+        .vs-mid-2 { right: 15px; bottom: 40px; width: 44px; height: 120px; border-color: var(--color-green); box-shadow: 0 0 18px rgba(0,255,102,0.4); z-index: 2; }
+        .vs-mid-2 .vessel-fluid { background: linear-gradient(to top, #00cc52, #00ff66); height: 50%; }
+
+        .vs-center-hero {
+            left: 50%; bottom: 10px;
+            transform: translateX(-50%);
+            width: 52px; height: 160px;
+            border-color: #ffffff;
+            box-shadow: 0 0 30px rgba(0,242,254,0.6), inset 0 0 15px rgba(255,255,255,0.2);
+            z-index: 5;
+            border-width: 2.5px;
+        }
+        .vs-center-hero .vessel-fluid {
+            height: 80%;
+            background: linear-gradient(45deg, #ff3366, #00e5ff, #00ff66);
+            animation: wave-motion 4s ease-in-out infinite alternate;
+        }
+
+        @keyframes wave-motion {
+            0% { filter: hue-rotate(0deg) saturate(1.2); }
+            100% { filter: hue-rotate(360deg) saturate(1.5); }
+        }
+
+        .start-btn {
+            background: linear-gradient(45deg, #2f3fa3, #00e5ff);
+            border: none;
+            color: white;
+            padding: 16px 55px;
+            font-size: 20px;
+            border-radius: 30px;
+            cursor: pointer;
+            font-weight: bold;
+            box-shadow: 0 0 25px rgba(0,229,255,0.5);
+            transition: transform 0.2s, box-shadow 0.2s;
+            margin-bottom: 20px;
+        }
+        .start-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 35px rgba(0,229,255,0.8);
+        }
+
+        /* 🌓 モード選択画面 */
+        #mode-screen {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: #06070d;
+            z-index: 900;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 20px;
+        }
+        .menu-choice-btn {
+            width: 260px;
+            padding: 20px;
+            font-size: 16px;
+            font-weight: bold;
+            border-radius: 12px;
+            border: 2px solid var(--bottle-border);
+            background: #141729;
+            color: white;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.2s;
+        }
+        .menu-choice-btn:hover {
+            border-color: var(--color-blue);
+            box-shadow: 0 0 15px rgba(0,229,255,0.3);
+            transform: translateY(-2px);
+        }
+
+        /* 🎮 メインゲーム画面レイアウト */
+        #main-game-layout {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+            max-width: 480px;
+        }
+
+        .header-area {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+            padding: 0 4px;
+            margin-bottom: 8px;
+        }
+
+        h1 {
+            margin: 0;
+            font-size: 22px;
+            letter-spacing: 1px;
+            text-shadow: 0 0 8px var(--color-blue);
+        }
+
+        .battle-panel {
+            display: flex;
+            align-items: stretch;
+            justify-content: space-between;
+            background: var(--panel-bg);
+            border-radius: 14px;
+            padding: 12px;
+            width: 100%;
+            margin-bottom: 8px;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.5);
+            gap: 12px;
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .side-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100px;
+            padding: 8px 4px;
+            border-radius: 10px;
+            background: rgba(0, 0, 0, 0.25);
+            border: 1px solid rgba(255, 255, 255, 0.03);
+            flex-shrink: 0;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .meta-block {
+            width: 100%;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .side-label {
+            font-size: 10px;
+            font-weight: bold;
+            letter-spacing: 0.5px;
+            margin-bottom: 2px;
+            white-space: nowrap;
+        }
+        .player-side .side-label { color: var(--player-color); }
+        .cpu-side .side-label { color: var(--cpu-color); }
+        
+        .solo-text-white {
+            color: #ffffff !important;
+            margin-top: 8px;
+        }
+
+        .score-display {
+            font-size: 22px;
+            font-weight: bold;
+            line-height: 1.1;
+        }
+
+        .center-controls {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-between;
+            flex: 1;
+            gap: 4px;
+            min-width: 140px;
+        }
+
+        .timer-container {
+            text-align: center;
+            margin-bottom: 2px;
+        }
+        .timer-label {
+            font-size: 9px;
+            color: #8a94b8;
+            letter-spacing: 1px;
+            font-weight: bold;
+        }
+        .time-display {
+            font-size: 16px;
+            font-weight: bold;
+            font-family: 'Courier New', Courier, monospace;
+            color: #ffffff;
+            text-shadow: 0 0 6px rgba(255,255,255,0.3);
+        }
+
+        .turn-indicator {
+            width: 100%;
+            text-align: center;
+            font-size: 12px;
+            font-weight: bold;
+            padding: 4px;
+            border-radius: 6px;
+            background: rgba(0,0,0,0.4);
+            white-space: nowrap;
+        }
+        .turn-player { color: var(--player-color); border: 1px solid rgba(0, 242, 254, 0.2); }
+        .turn-cpu { color: var(--cpu-color); border: 1px solid rgba(255, 65, 108, 0.2); }
+
+        .btn-row {
+            display: flex;
+            gap: 6px;
+            width: 100%;
+            justify-content: center;
+        }
+        .btn-row button {
+            flex: 1;
+            white-space: nowrap;
+        }
+
+        button, select {
+            background: #1f233a;
+            color: white;
+            border: 1px solid #4e5578;
+            padding: 6px 8px;
+            font-size: 11px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        button:hover, select:hover { background: #2b3152; }
+
+        /* ⚙️ 難易度セレクトボックスのサイズ微調整 */
+        #difficulty-select {
+            width: 100%;
+            max-width: 135px;
+            text-align: center;
+            text-align-last: center;
+        }
+
+        .hint-btn {
+            background: linear-gradient(45deg, #ff9100, #ffea00);
+            border: none;
+            color: #000;
+            width: 100%;
+            padding: 6px;
+            white-space: nowrap;
+            transition: transform 0.1s, opacity 0.2s;
+        }
+        .hint-btn:active { transform: scale(0.97); }
+
+        .pocket-slot {
+            width: 42px;
+            height: 86px;
+            display: flex;
+            justify-content: center;
+            align-items: flex-end;
+            background: transparent;
+            border: none;
+        }
+
+        #game-message-overlay {
+            font-size: 13px;
+            font-weight: bold;
+            color: #ffea00;
+            text-align: center;
+            margin-bottom: 6px;
+            min-height: 20px;
+        }
+
+        /* 8x4グリッド */
+        #game-container {
+            display: grid;
+            grid-template-columns: repeat(8, 1fr);
+            gap: 16px 8px;
+            padding: 12px 6px;
+            background: rgba(255,255,255,0.01);
+            border-radius: 12px;
+            width: 100%;
+            border: 1px solid rgba(255,255,255,0.03);
+        }
+
+        .bottle-slot {
+            position: relative;
+            width: 100%;
+            height: 96px;
+            display: flex;
+            justify-content: center;
+            align-items: flex-end;
+        }
+
+        /* 🧪 シリンダーボトル */
+        .bottle {
+            width: 32px;
+            height: 84px;
+            border: 2px solid var(--bottle-border);
+            border-top: 1px solid rgba(255,255,255,0.2);
+            border-radius: 0 0 16px 16px; 
+            position: relative;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column-reverse;
+            align-items: center;
+            background: linear-gradient(90deg, rgba(255,255,255,0.02) 0%, rgba(255,255,255,0.07) 100%);
+            box-shadow: inset 0 0 6px rgba(255,255,255,0.05);
+            transition: transform 0.2s, opacity 0.3s;
+        }
+
+        .bottle::before {
+            content: '';
+            position: absolute;
+            top: -3px; left: 50%;
+            transform: translateX(-50%);
+            width: 36px; height: 4px;
+            background: var(--bottle-border);
+            border-radius: 2px;
+        }
+
+        .bottle.selected {
+            transform: translateY(-10px);
+            border-color: #ffffff !important;
+            box-shadow: 0 0 12px rgba(255,255,255,0.6) !important;
+        }
+
+        .bottle.disabled {
+            cursor: not-allowed;
+            opacity: 0.15;
+        }
+
+        .bottle.completed-clear {
+            border: 2px dashed rgba(255, 255, 255, 0.15) !important;
+            border-radius: 0 0 16px 16px;
+            background: transparent;
+            box-shadow: none !important;
+        }
+        .bottle.completed-clear::before { background: rgba(255, 255, 255, 0.15); }
+
+        @keyframes flash-yellow-glow {
+            0%, 100% { border-color: var(--bottle-border); box-shadow: none; }
+            50% { border-color: var(--color-yellow); box-shadow: 0 0 16px var(--color-yellow); }
+        }
+        @keyframes flash-blue-glow {
+            0%, 100% { border-color: var(--bottle-border); box-shadow: none; }
+            50% { border-color: var(--color-blue); box-shadow: 0 0 16px var(--color-blue); }
+        }
+        .hint-flash-src { animation: flash-yellow-glow 0.4s ease 3; }
+        .hint-flash-dest { animation: flash-blue-glow 0.4s ease 3; }
+
+        /* 液体ブロック */
+        .liquid {
+            width: 100%;
+            height: 19px;
+            box-sizing: border-box;
+            border-bottom: 1px solid rgba(0,0,0,0.15);
+        }
+        .liquid:first-child { 
+            border-radius: 0 0 14px 14px; 
+            height: 21px;
+        }
+
+        .red { background: linear-gradient(90deg, #ff1a53, var(--color-red)); }
+        .blue { background: linear-gradient(90deg, #00b3cc, var(--color-blue)); }
+        .green { background: linear-gradient(90deg, #00cc52, var(--color-green)); }
+        .yellow { background: linear-gradient(90deg, #e6d200, var(--color-yellow)); }
+        .orange { background: linear-gradient(90deg, #e68200, var(--color-orange)); }
+
+        .rule-doc-container {
+            width: 100%;
+            background: #111424;
+            border: 1px solid #1f233a;
+            border-radius: 12px;
+            padding: 12px;
+            margin-top: 14px;
+            font-size: 11px;
+            line-height: 1.6;
+            color: #9aa2c2;
+        }
+        .rule-doc-title {
+            font-size: 13px;
+            font-weight: bold;
+            color: #ffffff;
+            margin-bottom: 6px;
+            border-bottom: 1px solid #3f51b5;
+            padding-bottom: 3px;
+        }
+
+        #animation-layer {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none; z-index: 500;
+        }
+
+        .pour-stream {
+            position: absolute;
+            width: 4px;
+            z-index: 998;
+            box-shadow: 0 0 8px currentColor;
+            transition: height 0.2s ease, opacity 0.2s ease;
+        }
+
+        /* ===== iOS Safari 対応修正 ===== */
+        * {
+            -webkit-touch-callout: none;
+        }
+        button,
+        .start-btn,
+        .menu-choice-btn,
+        .close-modal-btn,
+        .hint-btn,
+        .settings-icon {
+            -webkit-tap-highlight-color: transparent;
+            -webkit-appearance: none;
+            touch-action: manipulation;
+            cursor: pointer;
+        }
+        .bottle {
+            -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation;
+        }
+        /* iOSセーフエリア対応 */
+        body {
+            padding-top: max(8px, env(safe-area-inset-top));
+            padding-bottom: max(8px, env(safe-area-inset-bottom));
+            padding-left: max(8px, env(safe-area-inset-left));
+            padding-right: max(8px, env(safe-area-inset-right));
+        }
+        /* モード選択ボタンのbutton要素リセット */
+        button.menu-choice-btn {
+            width: 260px;
+            padding: 20px;
+            font-size: 16px;
+            font-weight: bold;
+            border-radius: 12px;
+            border: 2px solid var(--bottle-border);
+            background: #141729;
+            color: white;
+            text-align: center;
+            transition: all 0.2s;
+            display: block;
+        }
+        button.menu-choice-btn:active {
+            border-color: var(--color-blue);
+            box-shadow: 0 0 15px rgba(0,229,255,0.3);
+        }
+    </style>
+</head>
+<body>
+
+    <div id="settings-modal">
+        <div class="modal-content">
+            <div class="modal-title">環境設定</div>
+            <div class="volume-group">
+                <label>BGM 音量</label>
+                <input type="range" id="bgm-range" min="0" max="1" step="0.05" value="0.4" oninput="updateBgmVolume()">
+            </div>
+            <div class="volume-group">
+                <label>SE 音量</label>
+                <input type="range" id="se-range" min="0" max="1" step="0.05" value="0.5" onchange="triggerTestSE()">
+            </div>
+            <button class="close-modal-btn" onclick="closeSettings()">設定を閉じる</button>
+        </div>
+    </div>
+
+    <div id="start-screen">
+        <div class="settings-icon title-settings-pos" onclick="openSettings()">⚙️</div>
+        <div class="neon-title">COLOR<span> SORT</span><br>2D NEON</div>
+        
+        <div class="title-giant-art">
+            <div class="art-glow-base"></div>
+            <div class="vessel vs-back-1"><div class="vessel-fluid"></div></div>
+            <div class="vessel vs-back-2"><div class="vessel-fluid"></div></div>
+            <div class="vessel vs-mid-1"><div class="vessel-fluid"></div></div>
+            <div class="vessel vs-mid-2"><div class="vessel-fluid"></div></div>
+            <div class="vessel vs-center-hero"><div class="vessel-fluid"></div></div>
+        </div>
+
+        <button class="start-btn" id="start-btn" onclick="goToModeSelect()">GAME START</button>
+    </div>
+
+    <div id="mode-screen">
+        <div style="font-size:18px; font-weight:bold; margin-bottom:10px; text-shadow:0 0 5px #fff;">モードを選択してください</div>
+        <button class="menu-choice-btn" onclick="startGameWithMode('solo')">1人プレイ (SOLO)</button>
+        <button class="menu-choice-btn" onclick="startGameWithMode('vs')">CPU対戦 (VS MODE)</button>
+    </div>
+
+    <div id="main-game-layout">
+        <div class="header-area">
+            <h1 id="game-title-text">COLOR SORT 2D</h1>
+            <div class="settings-icon" onclick="openSettings()">⚙️</div>
+        </div>
+
+        <div class="battle-panel" id="top-battle-panel">
+            <div class="side-container player-side" id="player-side-container">
+                <div class="meta-block">
+                    <div id="score-label-player" class="side-label">YOUR SCORE</div>
+                    <div id="player-points" class="score-display">0</div>
+                    
+                    <div id="solo-timer-sub-block" style="display:none; text-align:center; width:100%;">
+                        <div class="side-label solo-text-white">TIME</div>
+                        <div id="solo-time" class="time-display" style="font-size: 15px;">00:00</div>
+                    </div>
+                </div>
+
+                <div class="pocket-slot" id="player-pocket-slot"></div>
+            </div>
+
+            <div class="center-controls">
+                <div class="timer-container" id="center-timer-container">
+                    <div class="timer-label">TIME</div>
+                    <div id="shared-time" class="time-display">00:00</div>
+                </div>
+
+                <div id="turn-status" class="turn-indicator turn-player">あなたのターン</div>
+                <button class="hint-btn" id="hint-button">💡 ヒント</button>
+                
+                <select id="difficulty-select"></select>
+
+                <div class="btn-row">
+                    <button onclick="backToTitle()">タイトルへ</button>
+                    <button onclick="initGame()">リセット</button>
+                </div>
+            </div>
+
+            <div class="side-container cpu-side" id="cpu-panel-side">
+                <div class="meta-block">
+                    <div class="side-label">CPU SCORE</div>
+                    <div id="cpu-points" class="score-display">0</div>
+                </div>
+                <div class="pocket-slot" id="cpu-pocket-slot"></div>
+            </div>
+        </div>
+
+        <div id="game-message-overlay"></div>
+        <div id="game-container"></div>
+    </div>
+
+    <div id="animation-layer"></div>
+
+    <div class="rule-doc-container" id="bottom-rule-box" style="display:none;">
+        <div class="rule-doc-title">🎮 ルール説明</div>
+        <div id="rule-text-content"></div>
+    </div>
+
+    <script>
+        const ROWS = 4;
+        const COLS = 8;
+        const MAIN_BOTTLES = ROWS * COLS; 
+        const BOTTLE_CAPACITY = 4;
+        const COLORS = ['red', 'blue', 'green', 'yellow', 'orange'];
+
+        let bottles = []; 
+        let selectedGlobalIndex = null;
+        let isAnimating = false;
+        let isGameFinished = false;
+        
+        let gameMode = 'vs'; 
+        let currentTurn = 'player';
+        let playerScore = 0;
+        let cpuScore = 0;
+
+        let gameStartTime = 0;
+        let timerInterval = null;
+        let isTimerRunning = false;
+
+        let isAutoPlayMode = false;
+        
+        // 🔄 循環ループ検知用の履歴配列（最大10手分を記憶）
+        let recentMovesHistory = []; 
+
+        let vBgm = 0.4;
+        let vSe = 0.5;
+
+        let audioCtx = null;
+        let bgmNode = null;
+        let isAudioInitialized = false;
+
+        function initAudio() {
+            if (isAudioInitialized) return;
+            try {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                isAudioInitialized = true;
+            } catch(e) {
+                console.warn('AudioContext init failed:', e);
+            }
+        }
+
+        function startSynthBGM(modeType) {
+            try {
+                initAudio();
+                if (!isAudioInitialized || !audioCtx) return;
+                if (audioCtx.state === 'suspended') audioCtx.resume();
+                if (bgmNode) {
+                    try { bgmNode.disconnect(); } catch(e) {}
+                    bgmNode = null;
+                }
+
+                bgmNode = audioCtx.createScriptProcessor(4096, 0, 1);
+            let sampleCount = 0;
+
+            bgmNode.onaudioprocess = function(e) {
+                const output = e.outputBuffer.getChannelData(0);
+                const sr = audioCtx.sampleRate;
+
+                for (let i = 0; i < output.length; i++) {
+                    const time = (sampleCount + i) / sr;
+                    let finalWave = 0;
+
+                    if (modeType === 0) {
+                        const tempoSec = 1.0; 
+                        const barIdx = Math.floor(time / (tempoSec * 4)) % 4;
+                        const baseFreqs = [110, 98, 116.5, 87.3]; 
+                        const fBase = baseFreqs[barIdx];
+                        
+                        let subBase = Math.sin(2 * Math.PI * fBase * time);
+                        let sawGlow = ( ( (time * fBase) % 1 ) - 0.5 ) * 0.15;
+                        const filterOsc = 0.4 + 0.3 * Math.sin(2 * Math.PI * 0.125 * time);
+                        
+                        const pPools = [
+                            [220, 261.6, 329.6], 
+                            [196, 246.9, 293.7], 
+                            [233.1, 293.7, 349.2], 
+                            [174.6, 220, 261.6]  
+                        ];
+                        let padWave = 0;
+                        const pChord = pPools[barIdx];
+                        pChord.forEach(f => {
+                            padWave += Math.sin(2 * Math.PI * f * time) * 0.2;
+                        });
+                        
+                        finalWave = (subBase * 0.4 + sawGlow * 0.3 + padWave * 0.3) * filterOsc;
+                    } 
+                    else {
+                        const bpm = 130;
+                        const tick = 60 / bpm / 4; 
+                        const step = Math.floor(time / tick);
+                        const bar = Math.floor(step / 16) % 4;
+                        const subStep = step % 16;
+
+                        const roots = [146.83, 110.00, 130.81, 116.54]; 
+                        const fRoot = roots[bar];
+
+                        const baseGate = (subStep % 4 === 0 || subStep % 4 === 2 || subStep % 4 === 3) ? 1 : 0.2;
+                        const baseDecay = Math.max(0, 1 - ((time / tick) % 1));
+                        let baseWave = Math.sign(Math.sin(2 * Math.PI * fRoot * time)) * 0.25 * baseGate * baseDecay;
+
+                        const scaleD = [
+                            [293.66, 349.23, 440.00, 587.33], 
+                            [220.00, 277.18, 329.63, 440.00], 
+                            [261.63, 329.63, 392.00, 523.25], 
+                            [233.08, 291.35, 349.23, 466.16]  
+                        ];
+                        const chordArr = scaleD[bar];
+                        const arpFreq = chordArr[(subStep * 3 + bar) % chordArr.length];
+                        const arpDecay = Math.max(0, 1 - ((time / tick) % 1)) * (subStep % 2 === 0 ? 0.8 : 0.4);
+                        let arpWave = (Math.sin(2 * Math.PI * arpFreq * time) + ((time*arpFreq)%1 - 0.5)*0.2) * 0.3 * arpDecay;
+
+                        finalWave = baseWave * 0.5 + arpWave * 0.5;
+                    }
+
+                    output[i] = finalWave * vBgm * 0.45;
+                }
+                sampleCount += output.length;
+            };
+            bgmNode.connect(audioCtx.destination);
+            } catch(e) {
+                console.warn('BGM start failed:', e);
+            }
+        }
+
+        function updateBgmVolume() {
+            vBgm = parseFloat(document.getElementById('bgm-range').value);
+        }
+
+        function triggerTestSE() {
+            vSe = parseFloat(document.getElementById('se-range').value);
+            initAudio();
+            playSynthSE(550, 0.15);
+        }
+
+        function playSynthSE(pitch, duration) {
+            try {
+                if(!isAudioInitialized || !audioCtx) return;
+                if (audioCtx.state === 'suspended') audioCtx.resume();
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(pitch, audioCtx.currentTime);
+                gain.gain.setValueAtTime(vSe * 0.15, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+                osc.connect(gain); gain.connect(audioCtx.destination);
+                osc.start(); osc.stop(audioCtx.currentTime + duration);
+            } catch(e){}
+        }
+
+        function playAutoPlayStartSE() {
+            try {
+                if(!isAudioInitialized || !audioCtx) return;
+                if (audioCtx.state === 'suspended') audioCtx.resume();
+                const now = audioCtx.currentTime;
+                [523.25, 659.25, 783.99, 1046.50].forEach((pitch, i) => {
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(pitch, now + i * 0.1);
+                    gain.gain.setValueAtTime(vSe * 0.15, now + i * 0.1);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.1 + 0.3);
+                    osc.connect(gain); gain.connect(audioCtx.destination);
+                    osc.start(now + i * 0.1); osc.stop(now + i * 0.1 + 0.3);
+                });
+            } catch(e){}
+        }
+
+        function goToModeSelect() {
+            try { initAudio(); } catch(e) {}
+            document.getElementById('start-screen').style.display = 'none';
+            document.getElementById('mode-screen').style.display = 'flex';
+        }
+
+        function backToTitle() {
+            stopTimer();
+            stopAutoPlay();
+            document.getElementById('main-game-layout').style.display = 'none';
+            document.getElementById('bottom-rule-box').style.display = 'none';
+            document.getElementById('start-screen').style.display = 'flex';
+            try { startSynthBGM(0); } catch(e) {}
+        }
+
+        function startGameWithMode(mode) {
+            gameMode = mode;
+            document.getElementById('mode-screen').style.display = 'none';
+            document.getElementById('main-game-layout').style.display = 'flex';
+            document.getElementById('bottom-rule-box').style.display = 'block';
+
+            const playerContainer = document.getElementById('player-side-container');
+            const cpuPanel = document.getElementById('cpu-panel-side');
+            const diffSelect = document.getElementById('difficulty-select');
+            const scoreLabel = document.getElementById('score-label-player');
+            const ruleBox = document.getElementById('rule-text-content');
+            const centerTimer = document.getElementById('center-timer-container');
+            const soloTimerSubBlock = document.getElementById('solo-timer-sub-block');
+
+            if (mode === 'solo') {
+                cpuPanel.style.display = 'none';
+                centerTimer.style.display = 'none';
+                soloTimerSubBlock.style.display = 'block';
+                scoreLabel.innerText = "SCORE";
+                scoreLabel.style.color = '#ffffff'; 
+                document.getElementById('player-pocket-slot').style.display = 'none';
+                
+                diffSelect.innerHTML = `
+                    <option value="solo_easy">空き瓶: 3本 (Easy)</option>
+                    <option value="solo_normal" selected>空き瓶: 2本 (Normal)</option>
+                    <option value="solo_hard">空き瓶: 1本 (Hard)</option>
+                `;
+                ruleBox.innerHTML = `<strong>【1人プレイモード専用ルール】</strong><br>・一時保管用の仮置き瓶（POCKET）はありません。盤面のみで整理します。<br>・同じ色を4マス集めて満タンにするとクリア（中身消滅）となり得点が入ります。`;
+            } else {
+                cpuPanel.style.display = 'flex';
+                centerTimer.style.display = 'block';
+                soloTimerSubBlock.style.display = 'none';
+                scoreLabel.innerText = "YOUR SCORE";
+                scoreLabel.style.color = 'var(--player-color)';
+                document.getElementById('player-pocket-slot').style.display = 'flex';
+
+                /* 📝 文面から説明を削除しシンプルな表記に変更 */
+                diffSelect.innerHTML = `
+                    <option value="easy">CPU: 弱い</option>
+                    <option value="normal">CPU: ふつう</option>
+                    <option value="hard" selected>CPU: 強い</option>
+                `;
+                ruleBox.innerHTML = `<strong>【CPU対戦モード専用ルール】</strong><br>・画面上部の一時仮置き瓶（POCKET）を活用して、色を整理していきます。<br>・メインの32本のシリンダー瓶の中で色が4つ揃うと完成（消滅）となり、得点が入ってターンが相手に移ります。`;
+            }
+
+            diffSelect.onchange = () => { initGame(); };
+            try { startSynthBGM(1); } catch(e) {}
+            initGame();
+        }
+
+        function openSettings() {
+            document.getElementById('settings-modal').style.display = 'flex';
+        }
+        function closeSettings() {
+            document.getElementById('settings-modal').style.display = 'none';
+        }
+
+        function startTimerOnFirstMove() {
+            if (isTimerRunning) return;
+            isTimerRunning = true;
+            gameStartTime = Date.now();
+            timerInterval = setInterval(updateTimerUI, 200);
+        }
+
+        function stopTimer() {
+            isTimerRunning = false;
+            if (timerInterval) {
+                clearInterval(timerInterval);
+                timerInterval = null;
+            }
+        }
+
+        function updateTimerUI() {
+            if (isGameFinished || !isTimerRunning) return;
+            const elapsedMs = Date.now() - gameStartTime;
+            const totalSec = Math.floor(elapsedMs / 1000);
+            const mins = Math.floor(totalSec / 60);
+            const secs = totalSec % 60;
+            const timeStr = `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+            
+            if (gameMode === 'solo') {
+                document.getElementById('solo-time').innerText = timeStr;
+            } else {
+                document.getElementById('shared-time').innerText = timeStr;
+            }
+        }
+
+        function initGame() {
+            stopTimer();
+            stopAutoPlay();
+            playerScore = 0; cpuScore = 0;
+            selectedGlobalIndex = null;
+            isAnimating = false;
+            isGameFinished = false;
+            recentMovesHistory = []; 
+            bottles = [];
+
+            document.getElementById('player-points').innerText = '0';
+            document.getElementById('cpu-points').innerText = '0';
+            document.getElementById('shared-time').innerText = '00:00';
+            document.getElementById('solo-time').innerText = '00:00';
+            document.getElementById('game-message-overlay').innerText = '';
+
+            if (gameMode === 'vs') {
+                currentTurn = Math.random() < 0.5 ? 'player' : 'cpu';
+            } else {
+                currentTurn = 'player';
+            }
+            updateTurnUI();
+
+            let emptyBottlesCount = 0; 
+            if (gameMode === 'solo') {
+                const diff = document.getElementById('difficulty-select').value;
+                if (diff === 'solo_easy') emptyBottlesCount = 3;
+                else if (diff === 'solo_normal') emptyBottlesCount = 2;
+                else if (diff === 'solo_hard') emptyBottlesCount = 1;
+            }
+
+            let totalFilledBottles = MAIN_BOTTLES - emptyBottlesCount; 
+            let colorPool = [];
+            
+            for (let s = 0; s < totalFilledBottles; s++) {
+                let chosenColor = COLORS[s % COLORS.length];
+                for (let c = 0; c < BOTTLE_CAPACITY; c++) {
+                    colorPool.push(chosenColor);
+                }
+            }
+
+            for (let i = colorPool.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [colorPool[i], colorPool[j]] = [colorPool[j], colorPool[i]];
+            }
+
+            for (let i = 0; i < MAIN_BOTTLES; i++) {
+                if (i >= MAIN_BOTTLES - emptyBottlesCount) {
+                    bottles.push({ globalId: i, type: 'main', colors: [], isCompleted: false });
+                    continue;
+                }
+
+                let bColors = [];
+                for(let j = 0; j < BOTTLE_CAPACITY; j++) {
+                    if (bColors.length >= 2 && colorPool.length > BOTTLE_CAPACITY) {
+                        let last1 = bColors[bColors.length - 1];
+                        let last2 = bColors[bColors.length - 2];
+                        if (colorPool[colorPool.length - 1] === last1 && last1 === last2) {
+                            for (let p = 0; p < colorPool.length - 1; p++) {
+                                if (colorPool[p] !== last1) {
+                                    let swp = colorPool[colorPool.length - 1];
+                                    colorPool[colorPool.length - 1] = colorPool[p];
+                                    colorPool[p] = swp;
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                    bColors.push(colorPool.pop());
+                }
+
+                if (bColors.every(c => c === bColors[0])) {
+                    const temp = bColors[3];
+                    for(let p = 0; p < colorPool.length; p++) {
+                        if(colorPool[p] !== bColors[0]) {
+                            bColors[3] = colorPool[p];
+                            colorPool[p] = temp;
+                            break;
+                        }
+                    }
+                }
+
+                bottles.push({ globalId: i, type: 'main', colors: bColors, isCompleted: false });
+            }
+
+            bottles.push({ globalId: 32, type: 'player_pocket', colors: [], isCompleted: false });
+            bottles.push({ globalId: 33, type: 'cpu_pocket', colors: [], isCompleted: false });
+
+            renderAllBoards();
+
+            if (gameMode === 'vs' && currentTurn === 'cpu') {
+                document.getElementById('game-message-overlay').innerText = '🎲 CPUが先攻に選ばれました！';
+                setTimeout(executeCPUMove, 1200);
+            } else if (gameMode === 'vs' && currentTurn === 'player') {
+                document.getElementById('game-message-overlay').innerText = '🎲 あなたが先攻に選ばれました！';
+            }
+        }
+
+        function renderAllBoards() {
+            const mainContainer = document.getElementById('game-container');
+            mainContainer.innerHTML = '';
+            document.getElementById('player-pocket-slot').innerHTML = '';
+            document.getElementById('cpu-pocket-slot').innerHTML = '';
+
+            bottles.forEach((bottle) => {
+                const bottleDiv = document.createElement('div');
+                bottleDiv.className = 'bottle';
+                bottleDiv.id = `bottle-${bottle.globalId}`;
+
+                if (bottle.isCompleted) bottleDiv.classList.add('completed-clear');
+
+                if (gameMode === 'vs') {
+                    if (currentTurn === 'player' && bottle.type === 'cpu_pocket') bottleDiv.classList.add('disabled');
+                    if (currentTurn === 'cpu' && bottle.type === 'player_pocket') bottleDiv.classList.add('disabled');
+                }
+                if (isGameFinished) bottleDiv.classList.add('disabled');
+
+                bottle.colors.forEach(color => {
+                    const liq = document.createElement('div');
+                    liq.className = `liquid ${color}`;
+                    bottleDiv.appendChild(liq);
+                });
+
+                bottleDiv.addEventListener('click', () => {
+                    if (isGameFinished || isAnimating || isAutoPlayMode) return;
+                    if (currentTurn === 'player') handleBottleClick(bottle.globalId);
+                });
+
+                if (bottle.type === 'main') {
+                    const slot = document.createElement('div');
+                    slot.className = 'bottle-slot';
+                    slot.appendChild(bottleDiv);
+                    mainContainer.appendChild(slot);
+                } else if (bottle.type === 'player_pocket') {
+                    document.getElementById('player-pocket-slot').appendChild(bottleDiv);
+                } else if (bottle.type === 'cpu_pocket') {
+                    document.getElementById('cpu-pocket-slot').appendChild(bottleDiv);
+                }
+            });
+        }
+
+        function updateTurnUI() {
+            if (isGameFinished) return;
+            const indicator = document.getElementById('turn-status');
+            
+            if (isAutoPlayMode) {
+                indicator.innerText = '🤖 自動操作モード中...';
+                indicator.className = 'turn-indicator turn-player';
+                return;
+            }
+            if (gameMode === 'solo') {
+                indicator.innerText = 'SOLO CHALLENGE';
+                indicator.className = 'turn-indicator turn-player';
+                return;
+            }
+            if (currentTurn === 'player') {
+                indicator.innerText = 'あなたのターン';
+                indicator.className = 'turn-indicator turn-player';
+            } else {
+                indicator.innerText = 'CPUのターン...';
+                indicator.className = 'turn-indicator turn-cpu';
+            }
+        }
+
+        function handleBottleClick(gIdx) {
+            const targetBottle = bottles[gIdx];
+            if (targetBottle.isCompleted) return;
+            if (gameMode === 'vs' && targetBottle.type === 'cpu_pocket') return;
+            if (gameMode === 'solo' && targetBottle.type === 'player_pocket') return; 
+
+            const element = document.getElementById(`bottle-${gIdx}`);
+
+            if (selectedGlobalIndex === null) {
+                if (targetBottle.colors.length === 0) return;
+                selectedGlobalIndex = gIdx;
+                element.classList.add('selected');
+                playSynthSE(400, 0.08);
+            } else {
+                const fromIdx = selectedGlobalIndex;
+                const toIdx = gIdx;
+                const prevElement = document.getElementById(`bottle-${fromIdx}`);
+
+                if (fromIdx === toIdx) {
+                    prevElement.classList.remove('selected');
+                    selectedGlobalIndex = null;
+                    return;
+                }
+
+                if (calculatePourCount(fromIdx, toIdx) > 0) {
+                    prevElement.classList.remove('selected');
+                    executeMove(fromIdx, toIdx);
+                } else {
+                    prevElement.classList.remove('selected');
+                    if (bottles[toIdx].colors.length > 0) {
+                        selectedGlobalIndex = toIdx;
+                        element.classList.add('selected');
+                        playSynthSE(400, 0.08);
+                    } else {
+                        selectedGlobalIndex = null;
+                    }
+                }
+            }
+        }
+
+        function calculatePourCount(fromIdx, toIdx) {
+            const fromB = bottles[fromIdx].colors;
+            const toB = bottles[toIdx].colors;
+
+            if (fromB.length === 0 || toB.length === BOTTLE_CAPACITY) return 0;
+            
+            const targetColor = fromB[fromB.length - 1];
+            if (toB.length > 0 && toB[toB.length - 1] !== targetColor) return 0;
+
+            let matchCount = 0;
+            for (let i = fromB.length - 1; i >= 0; i--) {
+                if (fromB[i] === targetColor) matchCount++;
+                else break;
+            }
+
+            const freeSpace = BOTTLE_CAPACITY - toB.length;
+            return Math.min(matchCount, freeSpace);
+        }
+
+        function findBestMoveForCurrentState() {
+            let allowedIndices = [];
+            for (let i = 0; i < bottles.length; i++) {
+                if (bottles[i].isCompleted) continue;
+                if (gameMode === 'solo' && bottles[i].type !== 'main') continue;
+                if (gameMode === 'vs') {
+                    if (currentTurn === 'player' && bottles[i].type === 'cpu_pocket') continue;
+                    if (currentTurn === 'cpu' && bottles[i].type === 'player_pocket') continue;
+                }
+                allowedIndices.push(i);
+            }
+
+            let moveCandidates = [];
+            let playerReaches = [];
+            let cpuReaches = [];
+
+            if (gameMode === 'vs') {
+                for (let i = 0; i < MAIN_BOTTLES; i++) {
+                    const bColors = bottles[i].colors;
+                    if (bColors.length === 3 && bColors.every(c => c === bColors[0])) {
+                        playerReaches.push(bColors[0]);
+                        cpuReaches.push(bColors[0]);
+                    }
+                }
+            }
+
+            for (let fromId of allowedIndices) {
+                const srcColors = bottles[fromId].colors;
+                if (srcColors.length === 0) continue;
+                
+                const srcTopColor = srcColors[srcColors.length - 1];
+                const isSrcAlreadyPure = srcColors.every(c => c === srcTopColor);
+
+                let srcTopCount = 0;
+                for (let i = srcColors.length - 1; i >= 0; i--) {
+                    if (srcColors[i] === srcTopColor) srcTopCount++;
+                    else break;
+                }
+
+                for (let toId of allowedIndices) {
+                    if (fromId === toId) continue;
+                    
+                    const pCount = calculatePourCount(fromId, toId);
+                    if (pCount > 0) {
+                        const dstColors = bottles[toId].colors;
+                        const isDestEmptyBefore = (dstColors.length === 0);
+                        let score = 0;
+
+                        let simSrc = [...srcColors];
+                        let simDst = [...dstColors];
+                        for(let k=0; k<pCount; k++) {
+                            simDst.push(simSrc.pop());
+                        }
+                        
+                        for (let h = 0; h < recentMovesHistory.length; h++) {
+                            const prevMove = recentMovesHistory[h];
+                            if ((prevMove.from === toId && prevMove.to === fromId) || (prevMove.from === fromId && prevMove.to === toId)) {
+                                score -= (5000 - h * 450); 
+                            }
+                        }
+
+                        if (bottles[toId].type === 'main' && (dstColors.length + pCount === BOTTLE_CAPACITY)) {
+                            let willComplete = true;
+                            for (let c of dstColors) {
+                                if (c !== srcTopColor) willComplete = false;
+                            }
+                            if (willComplete) {
+                                score += 6000; 
+                            }
+                        }
+
+                        if (bottles[toId].type.includes('pocket') && (dstColors.length + pCount === BOTTLE_CAPACITY)) {
+                            let willCompletePocket = true;
+                            for (let c of dstColors) {
+                                if (c !== srcTopColor) willCompletePocket = false;
+                            }
+                            if (willCompletePocket) {
+                                score -= 3000; 
+                            }
+                        }
+
+                        if (srcColors.length === pCount && bottles[fromId].type === 'main') {
+                            score += 500; 
+                        }
+
+                        if (srcTopCount === pCount && !isSrcAlreadyPure) {
+                            score += 150; 
+                        }
+
+                        if (!isDestEmptyBefore && dstColors[dstColors.length - 1] === srcTopColor) {
+                            score += 60;  
+                        }
+
+                        if (isDestEmptyBefore) {
+                            score += 30;  
+                        }
+
+                        if (gameMode === 'vs') {
+                            const myPocketId = (currentTurn === 'player') ? 32 : 33; 
+
+                            if (fromId === myPocketId && isSrcAlreadyPure && srcColors.length === BOTTLE_CAPACITY) {
+                                if (bottles[toId].type === 'main') score += 850; 
+                            }
+                            if (fromId === myPocketId && bottles[toId].type === 'main' && !isDestEmptyBefore) {
+                                score += 100; 
+                            }
+                            if (fromId === myPocketId && srcColors.length === pCount) {
+                                score += 80;
+                            }
+                            
+                            if (bottles[fromId].type === 'main' && toId === myPocketId && isDestEmptyBefore) {
+                                score += 350; 
+                            }
+
+                            if (currentTurn === 'cpu') {
+                                if (playerReaches.includes(srcTopColor)) {
+                                    if (toId === myPocketId) score += 400; 
+                                    else if (bottles[toId].type === 'main' && dstColors.length + pCount === BOTTLE_CAPACITY) score += 900; 
+                                    else score += 200; 
+                                }
+                                if (cpuReaches.includes(srcTopColor) && bottles[toId].type === 'main') {
+                                    score += 350;
+                                }
+                            }
+                        }
+
+                        if (srcColors.length > pCount && (dstColors.length + pCount < BOTTLE_CAPACITY)) {
+                            let nextSrcPure = true;
+                            for (let i = 0; i < srcColors.length - pCount; i++) {
+                                if (srcColors[i] !== srcColors[0]) nextSrcPure = false;
+                            }
+                            let nextDstColors = [...dstColors];
+                            for (let i = 0; i < pCount; i++) nextDstColors.push(srcTopColor);
+                            let nextDstPure = nextDstColors.every(c => c === nextDstColors[0]);
+
+                            if (!nextSrcPure && !nextDstPure) score -= 500; 
+                        }
+
+                        if (isSrcAlreadyPure && isDestEmptyBefore) score -= 999; 
+                        if (isSrcAlreadyPure && !isDestEmptyBefore) score -= 200; 
+
+                        moveCandidates.push({ from: fromId, to: toId, score: score });
+                    }
+                }
+            }
+
+            if (moveCandidates.length === 0) return null;
+
+            moveCandidates.sort((a, b) => b.score - a.score);
+
+            if (moveCandidates.length > 1 && Math.random() < 0.15) {
+                let pickIndex = Math.min(Math.floor(Math.random() * 3), moveCandidates.length - 1);
+                return moveCandidates[pickIndex];
+            }
+
+            return moveCandidates[0];
+        }
+
+        function triggerVisualHint() {
+            if (isGameFinished || isAnimating || isAutoPlayMode) return;
+
+            const bestMove = findBestMoveForCurrentState();
+            if (bestMove) {
+                const srcEl = document.getElementById(`bottle-${bestMove.from}`);
+                const destEl = document.getElementById(`bottle-${bestMove.to}`);
+                
+                srcEl.classList.remove('hint-flash-src', 'hint-flash-dest');
+                destEl.classList.remove('hint-flash-src', 'hint-flash-dest');
+                void srcEl.offsetWidth; 
+
+                srcEl.classList.add('hint-flash-src');
+                playSynthSE(620, 0.08);
+                
+                setTimeout(() => {
+                    if (!isGameFinished && destEl) {
+                        destEl.classList.add('hint-flash-dest');
+                        playSynthSE(720, 0.08);
+                    }
+                }, 400);
+                
+                setTimeout(() => {
+                    if(srcEl) srcEl.classList.remove('hint-flash-src');
+                    if(destEl) destEl.classList.remove('hint-flash-dest');
+                }, 2000);
+            }
+        }
+
+        function checkDeadlock() {
+            let allowedIndices = [];
+            for (let i = 0; i < bottles.length; i++) {
+                if (bottles[i].isCompleted) continue;
+                if (gameMode === 'solo' && bottles[i].type !== 'main') continue;
+                allowedIndices.push(i);
+            }
+
+            let meaningfulMovesCount = 0;
+            for (let fromId of allowedIndices) {
+                const srcColors = bottles[fromId].colors;
+                if (srcColors.length === 0) continue;
+                
+                const srcTopColor = srcColors[srcColors.length - 1];
+                let srcTopCount = 0;
+                for (let i = srcColors.length - 1; i >= 0; i--) {
+                    if (srcColors[i] === srcTopColor) srcTopCount++;
+                    else break;
+                }
+                const isSrcPure = srcColors.every(c => c === srcTopColor);
+
+                for (let toId of allowedIndices) {
+                    if (fromId === toId) continue;
+                    
+                    if (gameMode === 'vs') {
+                        if (bottles[fromId].type === 'player_pocket' && bottles[toId].type === 'cpu_pocket') continue;
+                        if (bottles[fromId].type === 'cpu_pocket' && bottles[toId].type === 'player_pocket') continue;
+                    }
+
+                    const pourCount = calculatePourCount(fromId, toId);
+                    if (pourCount === 0) continue; 
+
+                    const dstColors = bottles[toId].colors;
+
+                    if (dstColors.length + pourCount === BOTTLE_CAPACITY) {
+                        let willComplete = true;
+                        for (let c of dstColors) {
+                            if (c !== srcTopColor) willComplete = false;
+                        }
+                        if (willComplete) { meaningfulMovesCount++; continue; }
+                    }
+
+                    if (srcColors.length === pourCount) { meaningfulMovesCount++; continue; }
+                    if (isSrcPure) continue;
+                    if (srcTopCount > pourCount) continue;
+
+                    meaningfulMovesCount++;
+                }
+            }
+            return meaningfulMovesCount === 0;
+        }
+
+        function canActiveTurnPlayerMove() {
+            let activeIndices = [];
+            for (let i = 0; i < bottles.length; i++) {
+                if (bottles[i].isCompleted) continue;
+                if (gameMode === 'solo' && bottles[i].type !== 'main') continue;
+                if (gameMode === 'vs') {
+                    if (currentTurn === 'player' && bottles[i].type === 'cpu_pocket') continue;
+                    if (currentTurn === 'cpu' && bottles[i].type === 'player_pocket') continue;
+                }
+                activeIndices.push(i);
+            }
+            for (let fromId of activeIndices) {
+                if (bottles[fromId].colors.length === 0) continue;
+                for (let toId of activeIndices) {
+                    if (fromId === toId) continue;
+                    if (calculatePourCount(fromId, toId) > 0) return true;
+                }
+            }
+            return false;
+        }
+
+        function executeMove(fromIdx, toIdx) {
+            isAnimating = true;
+            selectedGlobalIndex = null;
+            startTimerOnFirstMove();
+
+            const animLayer = document.getElementById('animation-layer');
+            const fromBot = document.getElementById(`bottle-${fromIdx}`);
+            const toBot = document.getElementById(`bottle-${toIdx}`);
+
+            const pourCount = calculatePourCount(fromIdx, toIdx);
+            const fromColors = bottles[fromIdx].colors;
+            const toColors = bottles[toIdx].colors;
+            const targetColor = fromColors[fromColors.length - 1];
+
+            const layerRect = animLayer.getBoundingClientRect();
+            const fromRect = fromBot.getBoundingClientRect();
+            const toRect = toBot.getBoundingClientRect();
+
+            const cloneBot = fromBot.cloneNode(true);
+            cloneBot.classList.remove('selected');
+            cloneBot.id = `clone-bottle-${fromIdx}`;
+            
+            Object.assign(cloneBot.style, {
+                position: 'absolute',
+                left: `${fromRect.left - layerRect.left}px`,
+                top: `${fromRect.top - layerRect.top}px`,
+                width: `${fromRect.width}px`,
+                height: `${fromRect.height}px`,
+                margin: '0',
+                zIndex: '1000',
+                transition: 'transform 0.4s cubic-bezier(0.25, 1, 0.5, 1)',
+                transformOrigin: '50% 10px', 
+                pointerEvents: 'none'
+            });
+            animLayer.appendChild(cloneBot);
+
+            fromBot.style.opacity = '0';
+            playSynthSE(440, 0.12);
+
+            const isLeftToRight = (fromRect.left < toRect.left);
+            const targetLeft = toRect.left - layerRect.left + (isLeftToRight ? -30 : 30);
+            const targetTop = toRect.top - layerRect.top - 70;
+
+            requestAnimationFrame(() => {
+                cloneBot.style.left = `${targetLeft}px`;
+                cloneBot.style.top = `${targetTop}px`;
+            });
+
+            setTimeout(() => {
+                const rotationAngle = isLeftToRight ? 35 : -35;
+                cloneBot.style.transform = `rotate(${rotationAngle}deg)`;
+                setTimeout(() => playSynthSE(580, 0.15), 100);
+
+                const stream = document.createElement('div');
+                stream.className = 'pour-stream';
+                
+                const updatedCloneRect = cloneBot.getBoundingClientRect();
+                const streamX = toRect.left - layerRect.left + (toRect.width / 2) - 2;
+                const streamStartY = updatedCloneRect.top - layerRect.top + 25;
+                const streamHeight = toRect.top - layerRect.top - streamStartY + 10;
+
+                Object.assign(stream.style, {
+                    left: `${streamX}px`,
+                    top: `${streamStartY}px`,
+                    height: '0px', 
+                    color: `var(--color-${targetColor})`,
+                    backgroundColor: `var(--color-${targetColor})`,
+                    opacity: '1'
+                });
+                animLayer.appendChild(stream);
+
+                requestAnimationFrame(() => { stream.style.height = `${streamHeight}px`; });
+
+                for (let i = 0; i < pourCount; i++) {
+                    setTimeout(() => {
+                        if (cloneBot.lastChild) cloneBot.lastChild.remove();
+                        const liq = document.createElement('div');
+                        liq.className = `liquid ${targetColor}`;
+                        if (toBot.children.length === 0) {
+                            liq.style.borderRadius = '0 0 14px 14px';
+                            liq.style.height = '21px';
+                        }
+                        toBot.appendChild(liq);
+                        playSynthSE(700, 0.05);
+                    }, (i + 1) * 150);
+                }
+
+                const pourDuration = pourCount * 150 + 200;
+                setTimeout(() => {
+                    stream.style.opacity = '0';
+                    setTimeout(() => stream.remove(), 200);
+
+                    cloneBot.style.transform = 'rotate(0deg)';
+                    cloneBot.style.left = `${fromRect.left - layerRect.left}px`;
+                    cloneBot.style.top = `${fromRect.top - layerRect.top}px`;
+
+                    setTimeout(() => {
+                        cloneBot.remove();
+                        fromBot.style.opacity = '1'; 
+
+                        for (let i = 0; i < pourCount; i++) toColors.push(fromColors.pop());
+
+                        recentMovesHistory.unshift({ from: fromIdx, to: toIdx });
+                        if (recentMovesHistory.length > 10) {
+                            recentMovesHistory.pop();
+                        }
+
+                        let completedTo = false;
+                        let completedFrom = false;
+                        if (bottles[toIdx].type === 'main') completedTo = checkCompletion(toIdx);
+                        if (bottles[fromIdx].type === 'main') completedFrom = checkCompletion(fromIdx);
+
+                        const totalCompleted = (completedTo ? 1 : 0) + (completedFrom ? 1 : 0);
+                        const overlay = document.getElementById('game-message-overlay');
+
+                        if (totalCompleted > 0) {
+                            playSynthSE(880, 0.25); 
+                            recentMovesHistory = []; 
+                            if (currentTurn === 'player') {
+                                playerScore += totalCompleted;
+                                document.getElementById('player-points').innerText = playerScore;
+                                overlay.innerText = `✨ シリンダー満タン！ +${totalCompleted}点 ✨`;
+                            } else {
+                                cpuScore += totalCompleted;
+                                document.getElementById('cpu-points').innerText = cpuScore;
+                                overlay.innerText = `🤖 CPUクリア！ +${totalCompleted}点 🤖`;
+                            }
+                        } else {
+                            if (!isAutoPlayMode) overlay.innerText = '';
+                        }
+
+                        renderAllBoards();
+                        isAnimating = false;
+
+                        /* 🧪 判定処理の呼び出し */
+                        if (isAllCleared()) { declareWinner("ALL_CLEAR"); return; }
+                        if (checkDeadlock()) { declareWinner("STALEMATE"); return; }
+
+                        if (gameMode === 'vs') {
+                            currentTurn = (currentTurn === 'player') ? 'cpu' : 'player';
+                            if (!canActiveTurnPlayerMove()) {
+                                overlay.innerText = currentTurn === 'cpu' ? '⚠️ CPUがパスしました(動かせる手がありません)' : '⚠️ あなたがパスされました(動かせる手がありません)';
+                                currentTurn = (currentTurn === 'player') ? 'cpu' : 'player';
+                            }
+                        }
+
+                        updateTurnUI();
+                        renderAllBoards(); 
+
+                        if (isAutoPlayMode && !isGameFinished) {
+                            setTimeout(executeAutoPlayNextMove, 500);
+                        } else if (gameMode === 'vs' && currentTurn === 'cpu' && !isGameFinished) {
+                            setTimeout(executeCPUMove, 600);
+                        }
+                    }, 400); 
+                }, pourDuration);
+            }, 400); 
+        }
+
+        function checkCompletion(idx) {
+            const b = bottles[idx];
+            if (b.type === 'main' && b.colors.length === BOTTLE_CAPACITY && b.colors.every(c => c === b.colors[0])) {
+                b.isCompleted = true;
+                b.colors = [];
+                return true;
+            }
+            return false;
+        }
+
+        /* 🧪 オールクリア判定ロジックの修正 */
+        function isAllCleared() {
+            // 保管瓶（POCKET）も含めて、全34本(0〜33)の瓶の中に一つでも液体が残っていればfalse
+            for(let i = 0; i < bottles.length; i++) {
+                if(bottles[i].colors.length > 0) return false;
+            }
+            return true;
+        }
+
+        function declareWinner(reason) {
+            isGameFinished = true;
+            stopTimer();
+            stopAutoPlay();
+            
+            const overlay = document.getElementById('game-message-overlay');
+            const indicator = document.getElementById('turn-status');
+            
+            indicator.innerText = "GAME OVER";
+            indicator.className = "turn-indicator";
+
+            let header = (reason === "STALEMATE") ? "【手詰まり終了】" : "【オールクリア】";
+
+            if (gameMode === 'solo') {
+                overlay.innerText = `${header} パズル終了。最終スコア: ${playerScore}点`;
+            } else {
+                if (playerScore > cpuScore) overlay.innerText = `${header} あなたの勝ち！ (${playerScore}点 vs ${cpuScore}点)`;
+                else if (cpuScore > playerScore) overlay.innerText = `${header} CPUの勝ち... (${playerScore}点 vs ${cpuScore}点)`;
+                else overlay.innerText = `${header} 同点ドロー！ (${playerScore}点)`;
+            }
+            renderAllBoards();
+        }
+
+        function executeCPUMove() {
+            if (isGameFinished || gameMode === 'solo' || isAutoPlayMode) return;
+
+            const difficulty = document.getElementById('difficulty-select').value;
+            
+            if (difficulty === 'hard') {
+                const bestMove = findBestMoveForCurrentState();
+                if (bestMove) { executeMove(bestMove.from, bestMove.to); return; }
+            }
+
+            let validSourceIds = [];
+            for (let i = 0; i < bottles.length; i++) {
+                if (bottles[i].type === 'main' || bottles[i].type === 'cpu_pocket') validSourceIds.push(bottles[i].globalId);
+            }
+
+            let possibleMoves = [];
+            for (let fromId of validSourceIds) {
+                if (bottles[fromId].isCompleted || bottles[fromId].colors.length === 0) continue;
+                for (let toId of validSourceIds) {
+                    if (fromId === toId || bottles[toId].isCompleted) continue;
+
+                    const pCount = calculatePourCount(fromId, toId);
+                    if (pCount > 0) {
+                        let priority = 1;
+                        const fromColors = bottles[fromId].colors;
+                        const toColors = bottles[toId].colors;
+                        const targetColor = fromColors[fromColors.length - 1];
+
+                        if (bottles[toId].type === 'main' && toColors.length + pCount === BOTTLE_CAPACITY) {
+                            let willComplete = true;
+                            for(let c of toColors) { if(c !== targetColor) willComplete = false; }
+                            if(willComplete) priority = 50; 
+                        }
+                        
+                        if (bottles[toId].type === 'cpu_pocket' && toColors.length === 0) priority = 10; 
+                        possibleMoves.push({ from: fromId, to: toId, priority: priority });
+                    }
+                }
+            }
+
+            if (possibleMoves.length === 0) {
+                currentTurn = 'player';
+                updateTurnUI();
+                renderAllBoards();
+                return;
+            }
+
+            let chosenMove = null;
+            if (difficulty === 'easy') {
+                chosenMove = possibleMoves[Math.floor(Math.random() * possibleMoves.length)];
+            } else { 
+                possibleMoves.sort((a, b) => b.priority - a.priority);
+                if (Math.random() < 0.20 && possibleMoves.length > 1) {
+                    chosenMove = possibleMoves[1 + Math.floor(Math.random() * (possibleMoves.length - 1))];
+                } else {
+                    chosenMove = possibleMoves[0];
+                }
+            }
+
+            if (chosenMove) executeMove(chosenMove.from, chosenMove.to);
+        }
+
+        function startAutoPlay() {
+            if (isGameFinished) return;
+            isAutoPlayMode = true;
+            selectedGlobalIndex = null;
+            renderAllBoards();
+            updateTurnUI();
+            
+            document.getElementById('game-message-overlay').innerText = '🤖 AI自動操作モード起動 (画面ダブルタップで解除)';
+            playAutoPlayStartSE();
+            setTimeout(executeAutoPlayNextMove, 600);
+        }
+
+        function executeAutoPlayNextMove() {
+            if (!isAutoPlayMode || isGameFinished || isAnimating) return;
+
+            const bestMove = findBestMoveForCurrentState();
+            if (bestMove) {
+                executeMove(bestMove.from, bestMove.to);
+            } else {
+                stopAutoPlay();
+                if (checkDeadlock()) declareWinner("STALEMATE");
+            }
+        }
+
+        function stopAutoPlay() {
+            if (!isAutoPlayMode) return;
+            isAutoPlayMode = false;
+            document.getElementById('game-message-overlay').innerText = '⏹️ 自動操作モードを停止しました';
+            playSynthSE(300, 0.2);
+            updateTurnUI();
+            renderAllBoards();
+        }
+
+        let lastTapTime = 0;
+        function handleGlobalIntercept(e) {
+            if (!isAutoPlayMode) return;
+            if (hintBtn.contains(e.target)) return;
+
+            const now = Date.now();
+            const TIMESPAN = 350; 
+
+            if (now - lastTapTime < TIMESPAN) {
+                stopAutoPlay();
+                lastTapTime = 0;
+            } else {
+                lastTapTime = now;
+            }
+        }
+
+        window.addEventListener('mousedown', handleGlobalIntercept, true);
+        window.addEventListener('touchstart', handleGlobalIntercept, true);
+
+        const hintBtn = document.getElementById('hint-button');
+        let hintLongPressTimeout = null;
+
+        function onLongPressStart(e) {
+            if (isGameFinished || isAutoPlayMode) return;
+            e.preventDefault();
+            playSynthSE(500, 0.05);
+
+            hintLongPressTimeout = setTimeout(() => { startAutoPlay(); }, 5000); 
+        }
+
+        function onLongPressEnd(e) {
+            if (hintLongPressTimeout) { clearTimeout(hintLongPressTimeout); hintLongPressTimeout = null; }
+        }
+
+        hintBtn.addEventListener('mousedown', onLongPressStart);
+        hintBtn.addEventListener('mouseup', onLongPressEnd);
+        hintBtn.addEventListener('mouseleave', onLongPressEnd);
+        hintBtn.addEventListener('touchstart', onLongPressStart, { passive: false });
+        hintBtn.addEventListener('touchend', onLongPressEnd);
+        hintBtn.addEventListener('touchcancel', onLongPressEnd);
+
+        hintBtn.addEventListener('click', (e) => {
+            if (!isAutoPlayMode) triggerVisualHint();
+        });
+
+        // iOS対応: BGMはユーザー操作後にのみ開始（DOMContentLoadedでの自動起動はiOSで禁止）
+        // window.addEventListener('DOMContentLoaded', ...) は削除
+
+        // ===== iOS タッチイベント補完 =====
+        // iOSでtouchstartをclickの代わりに使うことで確実に反応させる
+        function addTouchFallback(id, handler) {
+            const el = document.getElementById(id);
+            if (!el) return;
+            let touchMoved = false;
+            el.addEventListener('touchstart', function(e) {
+                touchMoved = false;
+            }, { passive: true });
+            el.addEventListener('touchmove', function(e) {
+                touchMoved = true;
+            }, { passive: true });
+            el.addEventListener('touchend', function(e) {
+                if (!touchMoved) {
+                    e.preventDefault();
+                    handler();
+                }
+            }, { passive: false });
+        }
+
+        // GAME STARTボタンにタッチフォールバック追加
+        document.addEventListener('DOMContentLoaded', function() {
+            addTouchFallback('start-btn', goToModeSelect);
+        });
+    </script>
+</body>
+</html>

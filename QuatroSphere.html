@@ -1,0 +1,1343 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Quattro Sphere - 立体四目並べ Professional</title>
+    <style>
+        body {
+            margin: 0; padding: 0;
+            font-family: 'Century Gothic', 'Helvetica Neue', Arial, sans-serif;
+            background-color: #f1f5f9; 
+            overflow: hidden; user-select: none; -webkit-user-select: none;
+            color: #1e293b;
+        }
+
+        /* --- タイトル＆ナビゲーションオーバーレイ --- */
+        #title-overlay {
+            position: absolute; top: 0; left: 0; width: 100vw; height: 100vh;
+            background: radial-gradient(circle at center, rgba(255, 255, 255, 0.4) 0%, rgba(241, 245, 249, 0.95) 80%);
+            z-index: 200; display: flex; flex-direction: column; justify-content: space-between;
+            align-items: center; padding: 40px 20px; box-sizing: border-box;
+            transition: opacity 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        #title-overlay.hide { opacity: 0; pointer-events: none; }
+
+        .decor-frame {
+            position: absolute; top: 20px; left: 20px; right: 20px; bottom: 20px;
+            border: 1px solid rgba(15, 23, 42, 0.05); border-radius: 8px; pointer-events: none;
+        }
+
+        .title-header { text-align: center; margin-top: 20px; }
+        .main-logo {
+            font-size: 44px; font-weight: 900; text-transform: uppercase; letter-spacing: 4px; margin: 0;
+            background: linear-gradient(to bottom, #1e293b 0%, #64748b 100%);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            filter: drop-shadow(0px 2px 4px rgba(0,0,0,0.1));
+        }
+        .sub-logo { font-size: 13px; letter-spacing: 5px; color: #64748b; margin-top: 5px; font-weight: bold; }
+
+        .menu-page {
+            display: flex; flex-direction: column; gap: 12px; align-items: center;
+            width: 100%; max-width: 340px; transition: all 0.3s ease;
+        }
+        .menu-page.hide { display: none; }
+
+        .cylinder-btn {
+            position: relative; width: 280px; height: 50px; border: none; background: none; cursor: pointer; outline: none; transition: transform 0.2s;
+        }
+        .cylinder-btn:active { transform: scale(0.96); }
+        .cylinder-top {
+            position: absolute; top: 0; left: 0; width: 100%; height: 42px; border-radius: 21px;
+            display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 13px; font-weight: bold; letter-spacing: 1px;
+            text-transform: uppercase; z-index: 2; box-sizing: border-box;
+        }
+        .cylinder-bottom { position: absolute; top: 8px; left: 0; width: 100%; height: 42px; border-radius: 21px; z-index: 1; }
+
+        .btn-primary .cylinder-top {
+            background: linear-gradient(to bottom, #2563eb 0%, #1d4ed8 100%); color: #ffffff; border: 2px solid #3b82f6;
+            box-shadow: inset 0 1px 3px rgba(255,255,255,0.3), 0 4px 6px rgba(0,0,0,0.15);
+        }
+        .btn-primary .cylinder-bottom { background: #1e3a8a; box-shadow: 0 0 15px rgba(37, 99, 235, 0.2); }
+        
+        .btn-dark .cylinder-top {
+            background: linear-gradient(to bottom, #475569 0%, #334155 100%); color: #ffffff; border: 2px solid #64748b;
+            box-shadow: inset 0 1px 3px rgba(255,255,255,0.2), 0 4px 6px rgba(0,0,0,0.15);
+        }
+        .btn-dark .cylinder-bottom { background: #1e293b; }
+
+        .btn-dark.selected .cylinder-top {
+            background: linear-gradient(to bottom, #1d4ed8 0%, #1e3a8a 100%); border-color: #60a5fa;
+        }
+
+        .btn-back .cylinder-top { background: linear-gradient(to bottom, #94a3b8 0%, #64748b 100%); color: #f8fafc; }
+        .btn-back .cylinder-bottom { background: #475569; }
+
+        .btn-confirm .cylinder-top {
+            background: linear-gradient(to bottom, #10b981 0%, #059669 100%); color: #ffffff; border: 2px solid #34d399;
+            box-shadow: inset 0 1px 3px rgba(255,255,255,0.3), 0 4px 6px rgba(0,0,0,0.15);
+        }
+        .btn-confirm .cylinder-bottom { background: #064e3b; }
+
+        .btn-row {
+            display: flex; gap: 10px; width: 280px; justify-content: space-between;
+        }
+        .btn-row .cylinder-btn { width: 135px; }
+
+        .board-desc { font-size: 10px; color: #cbd5e1; font-weight: normal; margin-top: 1px; text-transform: none; letter-spacing: 0; opacity: 0.9; }
+
+        .lv-container {
+            display: flex; flex-direction: column; gap: 8px; width: 250px; margin-bottom: 5px;
+        }
+        .select-choice-btn {
+            padding: 12px; border-radius: 10px; border: 1px solid #cbd5e1; background: rgba(255, 255, 255, 0.8);
+            color: #64748b; font-size: 13px; font-weight: bold; cursor: pointer; transition: all 0.2s; text-align: center;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+        .select-choice-btn.selected {
+            background: linear-gradient(135deg, #2563eb, #1d4ed8); border-color: #2563eb; color: #ffffff;
+            box-shadow: 0 0 10px rgba(37, 99, 235, 0.2);
+        }
+
+        /* --- プレイ中UI --- */
+        #ui-container {
+            position: absolute; top: 0; left: 0; width: 100%; z-index: 10;
+            display: flex; flex-direction: column; align-items: center;
+            pointer-events: none; padding: 12px; box-sizing: border-box;
+            opacity: 0; transition: opacity 0.4s ease;
+        }
+        #ui-container.show { opacity: 1; }
+
+        .navbar {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(0, 0, 0, 0.06);
+            padding: 5px 10px; border-radius: 30px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+            display: flex; align-items: center; justify-content: space-between;
+            pointer-events: auto; width: 96%; max-width: 460px; box-sizing: border-box; gap: 6px;
+        }
+
+        .nav-left-group { display: flex; align-items: center; gap: 5px; flex-shrink: 0; }
+        .nav-right-group { display: flex; align-items: center; gap: 5px; flex-shrink: 0; }
+
+        .nav-btn {
+            background: rgba(0,0,0,0.03); border: 1px solid rgba(0,0,0,0.05); color: #475569; 
+            font-size: 14px; cursor: pointer; display: flex; align-items: center; justify-content: center; 
+            width: 34px; height: 34px; border-radius: 50%; transition: all 0.2s; flex-shrink: 0;
+        }
+        .nav-btn:hover { color: #0f172a; background: rgba(0,0,0,0.08); }
+
+        .info-badge-container {
+            display: flex; align-items: center; justify-content: center; min-width: 0; flex: 1;
+        }
+        .game-info-badge {
+            font-family: inherit; font-size: 10px; font-weight: bold; color: #1d4ed8;
+            background: rgba(37, 99, 235, 0.06); padding: 6px 10px; border-radius: 14px;
+            border: 1px solid rgba(37, 99, 235, 0.15); text-align: center; pointer-events: none;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%;
+        }
+
+        .nav-btn-reset {
+            background: #1e293b; border: 1px solid #0f172a; 
+            color: #fff; font-size: 10px; font-weight: bold; cursor: pointer;
+            display: flex; align-items: center; justify-content: center; gap: 3px; 
+            padding: 0 8px; height: 32px; border-radius: 16px; transition: all 0.2s; flex-shrink: 0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1); white-space: nowrap;
+        }
+        .nav-btn-reset:hover { background: #334155; }
+
+        .status {
+            margin-top: 12px; font-size: 13px; font-weight: bold;
+            background: #1e293b; padding: 5px 22px;
+            border-radius: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); color: #f8fafc;
+            transition: opacity 0.3s ease; pointer-events: auto;
+        }
+        .status.hide-status { opacity: 0; pointer-events: none; }
+
+        /* --- モーダル構造 --- */
+        .modal-overlay {
+            position: absolute; top: 0; left: 0; width: 100vw; height: 100vh;
+            background: rgba(15, 23, 42, 0.4); z-index: 300;
+            display: flex; justify-content: center; align-items: center;
+            opacity: 0; pointer-events: none; transition: opacity 0.3s ease;
+        }
+        .modal-overlay.show { opacity: 1; pointer-events: auto; }
+        
+        #options-modal.modal-overlay { background: rgba(15, 23, 42, 0.2); }
+
+        .modal-box {
+            background: #ffffff; padding: 22px 30px; border-radius: 20px;
+            box-shadow: 0 15px 35px rgba(15,23,42,0.15); text-align: center; width: 90%; max-width: 320px;
+            border: 1px solid rgba(0,0,0,0.05);
+        }
+        .modal-box h2 { margin: 0 0 20px 0; font-size: 16px; letter-spacing: 1px; color: #1d4ed8; }
+
+        .option-group { display: flex; flex-direction: column; gap: 14px; margin-bottom: 20px; text-align: left; }
+        .option-item { display: flex; flex-direction: column; gap: 6px; }
+        .option-label { font-size: 12px; font-weight: bold; color: #64748b; display: flex; justify-content: space-between;}
+        
+        .slider-container { display: flex; align-items: center; gap: 10px; }
+        .opt-slider {
+            flex: 1; -webkit-appearance: none; background: #e2e8f0; height: 6px; border-radius: 3px; outline: none;
+        }
+        .opt-slider::-webkit-slider-thumb {
+            -webkit-appearance: none; width: 16px; height: 16px; border-radius: 50%; background: #2563eb; cursor: pointer;
+        }
+
+        .room-select-wrapper { display: flex; align-items: center; gap: 10px; }
+        .opt-select {
+            flex: 1; padding: 8px 12px; background: #f8fafc; border: 1px solid #cbd5e1;
+            border-radius: 8px; color: #1e293b; font-size: 12px; font-weight: bold; outline: none; cursor: pointer;
+        }
+
+        .result-title { font-size: 42px; font-weight: 900; margin: 0 0 10px 0; letter-spacing: 2px; }
+        .result-title.win { color: #d97706; text-shadow: 0 0 10px rgba(217,119,6,0.2); }
+        .result-title.lose { color: #dc2626; text-shadow: 0 0 10px rgba(220,38,38,0.2); }
+        .result-title.draw { color: #475569; }
+        
+        .modal-btn-group { display: flex; flex-direction: column; gap: 10px; margin-top: 15px; align-items: center; }
+        .modal-btn {
+            font-size: 12px; padding: 10px 24px; border-radius: 20px; width: 80%;
+            background: linear-gradient(to bottom, #1e293b 0%, #334155 100%); color: #ffffff; border: none; cursor: pointer; font-weight: bold;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1); transition: all 0.2s;
+        }
+        .modal-btn-action { background: linear-gradient(to bottom, #2563eb 0%, #1d4ed8 100%); border: 1px solid #3b82f6; }
+
+        #canvas-container { width: 100vw; height: 100vh; background-color: #f1f5f9; }
+        .guide-tip {
+            position: absolute; bottom: 16px; left: 50%; transform: translateX(-50%);
+            font-size: 10px; color: #475569; background: rgba(255, 255, 255, 0.85);
+            padding: 5px 14px; border-radius: 15px; pointer-events: none;
+            opacity: 0; transition: opacity 0.5s ease; border: 1px solid rgba(0,0,0,0.05);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+        .guide-tip.show { opacity: 1; }
+    </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+</head>
+<body>
+
+<div id="title-overlay">
+    <div class="decor-frame"></div>
+    
+    <div style="width: 100%; display: flex; justify-content: flex-end; box-sizing: border-box;">
+        <button id="title-opt-btn" class="nav-btn" style="width:40px; height:40px; font-size:16px;" title="環境設定">⚙️</button>
+    </div>
+
+    <div class="title-header">
+        <h1 class="main-logo">Quattro Sphere</h1>
+        <div class="sub-logo">3D CONNECTION PUZZLE</div>
+    </div>
+
+    <div id="page-main" class="menu-page">
+        <button id="to-board-btn" class="cylinder-btn btn-primary">
+            <div class="cylinder-bottom"></div>
+            <div class="cylinder-top">GAME START</div>
+        </button>
+    </div>
+
+    <div id="page-board" class="menu-page hide">
+        <div style="font-size:12px; font-weight:bold; color:#1d4ed8; letter-spacing:1px; margin-bottom:4px;">バトルフィールド（盤面）を選択</div>
+        
+        <button class="cylinder-btn btn-dark board-select-btn selected" data-width="5" data-height="6" data-name="スタンダード・コンバット">
+            <div class="cylinder-bottom"></div>
+            <div class="cylinder-top">
+                <span>Standard Combat</span>
+                <span class="board-desc">標準バランス型 [5×5×6]</span>
+            </div>
+        </button>
+
+        <button class="cylinder-btn btn-dark board-select-btn" data-width="6" data-height="6" data-name="グランド・タクティクス">
+            <div class="cylinder-bottom"></div>
+            <div class="cylinder-top">
+                <span>Grand Tactics</span>
+                <span class="board-desc">広域・平面戦重視 [6×6×6]</span>
+            </div>
+        </button>
+
+        <button class="cylinder-btn btn-dark board-select-btn" data-width="4" data-height="6" data-name="ソリッド・マトリクス">
+            <div class="cylinder-bottom"></div>
+            <div class="cylinder-top">
+                <span>Solid Matrix</span>
+                <span class="board-desc">極小・立体戦重視 [4×4×6]</span>
+            </div>
+        </button>
+
+        <div class="btn-row">
+            <button id="back-to-main" class="cylinder-btn btn-back">
+                <div class="cylinder-bottom"></div>
+                <div class="cylinder-top">戻る</div>
+            </button>
+            <button id="board-select-confirm-btn" class="cylinder-btn btn-confirm">
+                <div class="cylinder-bottom"></div>
+                <div class="cylinder-top">この盤面にする</div>
+            </button>
+        </div>
+    </div>
+
+    <div id="page-mode" class="menu-page hide">
+        <div id="selected-board-label" style="font-size:11px; font-weight:bold; color:#64748b;">選択中: スタンダード・コンバット</div>
+        <button id="mode-1p-btn" class="cylinder-btn btn-primary">
+            <div class="cylinder-bottom"></div>
+            <div class="cylinder-top">1 Player (vs CPU)</div>
+        </button>
+        <button id="mode-2p-btn" class="cylinder-btn btn-dark">
+            <div class="cylinder-bottom"></div>
+            <div class="cylinder-top">2 Player (対人戦)</div>
+        </button>
+        <button id="back-to-board" class="cylinder-btn btn-back">
+            <div class="cylinder-bottom"></div>
+            <div class="cylinder-top">戻る</div>
+        </button>
+    </div>
+
+    <div id="page-diff" class="menu-page hide">
+        <div style="font-size:12px; font-weight:bold; color:#1d4ed8; letter-spacing:1px;">CPU難易度を選択</div>
+        <div class="lv-container">
+            <div class="lv-btn select-choice-btn" data-lv="easy">簡単 (Easy)</div>
+            <div class="lv-btn select-choice-btn selected" data-lv="normal">普通 (Normal)</div>
+            <div class="lv-btn select-choice-btn" data-lv="hard">難しい (Hard)</div>
+        </div>
+        <button id="start-cpu-game-btn" class="cylinder-btn btn-primary">
+            <div class="cylinder-bottom"></div>
+            <div class="cylinder-top">対戦スタート</div>
+        </button>
+        <button id="back-to-mode" class="cylinder-btn btn-back">
+            <div class="cylinder-bottom"></div>
+            <div class="cylinder-top">戻る</div>
+        </button>
+    </div>
+
+    <div style="height: 10px;"></div>
+</div>
+
+<div id="ui-container">
+    <div class="navbar">
+        <div class="nav-left-group">
+            <button id="home-btn" class="nav-btn" title="タイトルへ">🏠</button>
+            <button id="game-opt-btn" class="nav-btn" title="環境設定">⚙️</button>
+        </div>
+        <div class="info-badge-container">
+            <div id="game-info-display-badge" class="game-info-badge">5×5×6 | CPU (普通)</div>
+        </div>
+        <div class="nav-right-group">
+            <button id="restart-btn" class="nav-btn-reset" title="ゲームリセット">
+                <span>リセット</span>🔄
+            </button>
+        </div>
+    </div>
+    <div class="status" id="status">あなたの番です (白)</div>
+</div>
+
+<div id="options-modal" class="modal-overlay">
+    <div class="modal-box">
+        <h2>環境設定</h2>
+        <div class="option-group">
+            <div class="option-item">
+                <div class="option-label"><span>BGM 音量</span><span id="bgm-val">70%</span></div>
+                <div class="slider-container">
+                    <input type="range" id="bgm-slider" class="opt-slider" min="0" max="100" value="70">
+                </div>
+            </div>
+            <div class="option-item">
+                <div class="option-label"><span>効果音 音量</span><span id="se-val">70%</span></div>
+                <div class="slider-container">
+                    <input type="range" id="se-slider" class="opt-slider" min="0" max="100" value="70">
+                </div>
+            </div>
+            <div class="option-item">
+                <div class="option-label"><span>部屋の背景</span></div>
+                <div class="room-select-wrapper">
+                    <select id="room-select" class="opt-select">
+                        <option value="light_cyber">💡 1. サイバー・クリーンルーム [明]</option>
+                        <option value="light_study">💡 2. 陽だまりのモダン書斎 [明]</option>
+                        <option value="dark_lab">🌙 3. メタリック・ナイトラボ [暗]</option>
+                        <option value="dark_bar">🌙 4. 黄昏のジャズラウンジ [暗]</option>
+                    </select>
+                </div>
+            </div>
+            <div class="option-item" id="midgame-difficulty-container">
+                <div class="option-label"><span>CPU 難易度 (対戦中)</span></div>
+                <div class="room-select-wrapper">
+                    <select id="midgame-cpu-select" class="opt-select">
+                        <option value="easy">簡単 (Easy)</option>
+                        <option value="normal" selected>普通 (Normal)</option>
+                        <option value="hard">難しい (Hard)</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+        <button id="close-opt-btn" class="modal-btn">閉じる</button>
+    </div>
+</div>
+
+<div id="game-over-overlay" class="modal-overlay">
+    <div class="modal-box">
+        <h1 id="result-text" class="result-title">WIN</h1>
+        <div class="modal-btn-group">
+            <button id="game-over-action-btn" class="modal-btn modal-btn-action">もう一度対戦する</button>
+            <button id="view-board-btn" class="modal-btn">盤面を確認する</button>
+        </div>
+    </div>
+</div>
+
+<div id="canvas-container"></div>
+<div class="guide-tip" id="guide-tip">💡 ボードを回転：スワイプ / コマを配置：マスの輪をタップ</div>
+
+<script>
+    let BOARD_WIDTH = 5;
+    let BOARD_HEIGHT = 6;
+    let BOARD_NAME = "スタンダード・コンバット";
+    const WIN_COUNT = 4;
+
+    let board = []; 
+    let stackCounts = []; 
+    let currentPlayer = 1; 
+    let playerColorAssignment = 1; 
+    let isGameOver = false;
+    let gameMode = 'vs-cpu'; 
+    let cpuLevel = 'normal'; 
+    let selectedRoomType = 'light_cyber'; 
+    let isGameStarted = false; 
+
+    let pieceMeshes = []; 
+    let cellTargets = [];  
+    let winningLinePieces = []; 
+    let matchWinner = 0; 
+
+    let scene, camera, renderer, controls;
+    let roomObjectsGroup = null; 
+    let boardMesh = null;
+    const container = document.getElementById('canvas-container');
+
+    const roomThemes = {
+        light_cyber: { bg: 0xf1f5f9, board: 0xffffff, ring: 0x3b82f6, whiteGlow: 0x00d2ff, blackGlow: 0xe91e63, isDark: false },
+        light_study: { bg: 0xfaf6ee, board: 0xcd853f, ring: 0x8b4513, whiteGlow: 0xe67e22, blackGlow: 0x2980b9, isDark: false },
+        dark_lab:    { bg: 0x0f172a, board: 0x1e293b, ring: 0x00d2ff, whiteGlow: 0x38bdf8, blackGlow: 0xf43f5e, isDark: true },
+        dark_bar:    { bg: 0x1c1917, board: 0x44403c, ring: 0xd97706, whiteGlow: 0xf59e0b, blackGlow: 0xdc2626, isDark: true }
+    };
+
+    let colors = roomThemes.light_cyber;
+
+    let audioParams = { bgmMaster: 0.7, seMaster: 0.7 };
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    let bgmIntervalId = null;
+    let bgmGainNode = null;
+    let currentBgmTrack = 0;
+
+    // カノン進行 (Cメジャー基準: C - G - Am - Em - F - C - F - G) の各和音構成周波数テーブル
+    // 0: C (C3, E3, G3, C4)  | 1: G (G2, B3, D4, G4)  | 2: Am (A2, C3, E3, A3) | 3: Em (E2, G3, B3, E4)
+    // 4: F (F2, A3, C4, F4)  | 5: C (C3, E3, G3, C4)  | 6: F (F2, A3, C4, F4)  | 7: G (G2, B3, D4, G4)
+    const canonChords = [
+        { base: 130.81, chord: [130.81, 164.81, 196.00, 261.63] }, // C
+        { base: 97.99,  chord: [196.00, 246.94, 293.66, 392.00] }, // G
+        { base: 110.00, chord: [110.00, 130.81, 164.81, 220.00] }, // Am
+        { base: 82.41,  chord: [164.81, 196.00, 246.94, 329.63] }, // Em
+        { base: 87.31,  chord: [174.61, 220.00, 261.63, 349.23] }, // F
+        { base: 130.81, chord: [130.81, 164.81, 196.00, 261.63] }, // C
+        { base: 87.31,  chord: [174.61, 220.00, 261.63, 349.23] }, // F
+        { base: 97.99,  chord: [196.00, 246.94, 293.66, 392.00] }  // G
+    ];
+
+    // 各トラックごとの演奏スタイル・テンポ設定
+    const tracksConfig = [
+        { bpm: 75,  prob: 0.30, type: 'sine',     release: 0.6, label: 'タイトル（穏やかなカノンアンビエント）' },
+        { bpm: 140, prob: 0.45, type: 'sine',     release: 0.2, label: 'バトル1（標準テンポ・クリア）' },      
+        { bpm: 155, prob: 0.50, type: 'triangle', release: 0.18, label: 'バトル2（アップテンポ・アクティブ）' },  
+        { bpm: 130, prob: 0.40, type: 'sine',     release: 0.25, label: 'バトル3（ミドルテンポ・チル）' },     
+        { bpm: 148, prob: 0.60, type: 'triangle', release: 0.15, label: 'バトル4（ハイプロバビリティ・華やか）' },  
+        { bpm: 135, prob: 0.55, type: 'sine',     release: 0.22, label: 'バトル5（マイルド・スマート）' }      
+    ];
+
+    function updateAudioGains() {
+        if (bgmGainNode) {
+            let targetVol = (currentBgmTrack === 0) ? 0.60 : 0.45;
+            bgmGainNode.gain.setValueAtTime(targetVol * audioParams.bgmMaster, audioCtx.currentTime);
+        }
+    }
+
+    function startBGM(trackIndex) {
+        stopBGM();
+        try {
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            currentBgmTrack = trackIndex;
+            bgmGainNode = audioCtx.createGain();
+            updateAudioGains();
+            bgmGainNode.connect(audioCtx.destination);
+
+            let step = 0;
+            let cfg = tracksConfig[trackIndex] || tracksConfig[0];
+            // 8拍（カノン進行1巡）＝ 16ステップ（半拍ごと）
+            let intervalTime = Math.round(60000 / cfg.bpm / 2); 
+
+            bgmIntervalId = setInterval(() => {
+                const now = audioCtx.currentTime;
+                // 現在の進行位置 (0〜7のコードインデックス)
+                const chordIdx = Math.floor(step / 2) % 8;
+                const currentChord = canonChords[chordIdx];
+
+                // --- ベース音・ルート伴奏（1拍の表でトリガー） ---
+                if (step % 2 === 0) {
+                    const oscBase = audioCtx.createOscillator();
+                    const gainBase = audioCtx.createGain();
+                    oscBase.type = 'triangle';
+                    
+                    // トラック0（タイトル）はより低いベース、ゲーム中は適度な低音
+                    let baseFreq = currentBgmTrack === 0 ? currentChord.base : currentChord.base * 2;
+                    oscBase.frequency.setValueAtTime(baseFreq, now);
+                    
+                    gainBase.gain.setValueAtTime(0.40, now); 
+                    gainBase.gain.exponentialRampToValueAtTime(0.001, now + (intervalTime * 2 / 1000));
+                    
+                    oscBase.connect(gainBase); 
+                    gainBase.connect(bgmGainNode);
+                    oscBase.start(now); 
+                    oscBase.stop(now + (intervalTime * 2 / 1000));
+                }
+
+                // --- メロディ・アルペジオ（ランダムあるいはステップ連動） ---
+                if (Math.random() > (1 - cfg.prob)) {
+                    const oscMel = audioCtx.createOscillator();
+                    const gainMel = audioCtx.createGain();
+                    oscMel.type = cfg.type;
+                    
+                    // 現在のコード構成音からランダムに、1〜2オクターブ上でメロディを紡ぐ
+                    const chordNotes = currentChord.chord;
+                    let randomNote = chordNotes[Math.floor(Math.random() * chordNotes.length)];
+                    let octaveShift = Math.random() > 0.6 ? 2.0 : 1.0;
+                    
+                    oscMel.frequency.setValueAtTime(randomNote * octaveShift, now);
+                    
+                    gainMel.gain.setValueAtTime(0.28, now); 
+                    gainMel.gain.exponentialRampToValueAtTime(0.001, now + cfg.release);
+                    
+                    oscMel.connect(gainMel); 
+                    gainMel.connect(bgmGainNode);
+                    oscMel.start(now); 
+                    oscMel.stop(now + cfg.release);
+                }
+
+                step = (step + 1) % 16;
+            }, intervalTime); 
+        } catch(e) {}
+    }
+
+    function stopBGM() {
+        if (bgmIntervalId) { clearInterval(bgmIntervalId); bgmIntervalId = null; }
+    }
+
+    async function playVictoryLayerSound() {
+        if (audioParams.seMaster === 0) return;
+        try {
+            if (audioCtx.state === 'suspended') await audioCtx.resume();
+            const now = audioCtx.currentTime;
+            const synthGain = audioCtx.createGain();
+            synthGain.gain.setValueAtTime(0.45 * audioParams.seMaster, now);
+            synthGain.gain.exponentialRampToValueAtTime(0.001, now + 2.5);
+            synthGain.connect(audioCtx.destination);
+
+            const notes = [523.25, 659.25, 783.99, 1046.50]; 
+            notes.forEach((freq, idx) => {
+                const osc = audioCtx.createOscillator();
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(freq, now + idx * 0.12);
+                const filter = audioCtx.createBiquadFilter();
+                filter.type = 'lowpass'; filter.frequency.setValueAtTime(1500, now);
+                osc.connect(filter); filter.connect(synthGain);
+                osc.start(now + idx * 0.12); osc.stop(now + 2.0);
+            });
+        } catch(e) {}
+    }
+
+    async function playDefeatLayerSound() {
+        if (audioParams.seMaster === 0) return;
+        try {
+            if (audioCtx.state === 'suspended') await audioCtx.resume();
+            const now = audioCtx.currentTime;
+            const masterGain = audioCtx.createGain();
+            masterGain.gain.setValueAtTime(0.6 * audioParams.seMaster, now);
+            masterGain.gain.exponentialRampToValueAtTime(0.001, now + 2.2);
+            masterGain.connect(audioCtx.destination);
+
+            const steps = [
+                { f1: 293.66, f2: 311.13, start: 0.00, duration: 0.35 }, 
+                { f1: 261.63, f2: 277.18, start: 0.30, duration: 0.35 }, 
+                { f1: 220.00, f2: 233.08, start: 0.60, duration: 0.40 }, 
+                { f1: 174.61, f2: 185.00, start: 0.95, duration: 0.80 }  
+            ];
+
+            steps.forEach(step => {
+                const timeShift = now + step.start;
+                const osc1 = audioCtx.createOscillator();
+                const gain1 = audioCtx.createGain();
+                osc1.type = 'triangle'; 
+                osc1.frequency.setValueAtTime(step.f1, timeShift);
+                osc1.frequency.exponentialRampToValueAtTime(step.f1 * 0.92, timeShift + step.duration);
+                
+                gain1.gain.setValueAtTime(0.35, timeShift);
+                gain1.gain.linearRampToValueAtTime(0.35, timeShift + step.duration * 0.7);
+                gain1.gain.exponentialRampToValueAtTime(0.001, timeShift + step.duration);
+                
+                osc1.connect(gain1); gain1.connect(masterGain);
+                osc1.start(timeShift); osc1.stop(timeShift + step.duration);
+
+                const osc2 = audioCtx.createOscillator();
+                const gain2 = audioCtx.createGain();
+                osc2.type = 'sine';
+                osc2.frequency.setValueAtTime(step.f2, timeShift);
+                osc2.frequency.exponentialRampToValueAtTime(step.f2 * 0.92, timeShift + step.duration);
+                
+                gain2.gain.setValueAtTime(0.18, timeShift);
+                gain2.gain.exponentialRampToValueAtTime(0.001, timeShift + step.duration);
+                
+                osc2.connect(gain2); gain2.connect(masterGain);
+                osc2.start(timeShift); osc2.stop(timeShift + step.duration);
+            });
+        } catch(e) {}
+    }
+    
+    function playClickSound() {
+        if (audioParams.seMaster === 0) return;
+        try {
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            const now = audioCtx.currentTime;
+            const osc = audioCtx.createOscillator(); const gainNode = audioCtx.createGain();
+            osc.type = 'sine'; osc.frequency.setValueAtTime(650, now); osc.frequency.setValueAtTime(950, now + 0.04); 
+            gainNode.gain.setValueAtTime(0.15 * audioParams.seMaster, now); gainNode.gain.exponentialRampToValueAtTime(0.001, now + 0.10);
+            osc.connect(gainNode); gainNode.connect(audioCtx.destination);
+            osc.start(now); osc.stop(now + 0.10);
+        } catch(e) {}
+    }
+    
+    function playPlaceSound() {
+        if (audioParams.seMaster === 0) return;
+        try {
+            const now = audioCtx.currentTime;
+            const osc = audioCtx.createOscillator(); const oscGain = audioCtx.createGain();
+            osc.type = 'sine'; osc.frequency.setValueAtTime(520, now); osc.frequency.exponentialRampToValueAtTime(200, now + 0.02);
+            oscGain.gain.setValueAtTime(0.4 * audioParams.seMaster, now); oscGain.gain.exponentialRampToValueAtTime(0.001, now + 0.025); 
+            osc.connect(oscGain); oscGain.connect(audioCtx.destination);
+            osc.start(now); osc.stop(now + 0.03);
+        } catch(e) {}
+    }
+
+    function init3D() {
+        scene = new THREE.Scene();
+        roomObjectsGroup = new THREE.Group();
+        scene.add(roomObjectsGroup);
+
+        camera = new THREE.PerspectiveCamera(42, window.innerWidth / window.innerHeight, 1, 1000);
+        
+        renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.shadowMap.enabled = true;
+        renderer.shadowMap.type = THREE.PCFSoftShadowMap; 
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        container.appendChild(renderer.domElement);
+
+        controls = new THREE.OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true; controls.dampingFactor = 0.06;
+        controls.maxPolarAngle = Math.PI / 2 - 0.06; 
+        
+        adjustCameraLimits();
+        adjustCameraPosition();
+
+        controls.autoRotate = true; controls.autoRotateSpeed = 1.2;
+
+        rebuildRoomEnvironment();
+
+        window.addEventListener('resize', onWindowResize);
+        renderer.domElement.addEventListener('pointerdown', onPointerDown);
+
+        document.body.addEventListener('pointerdown', () => {
+            if(!isGameStarted && !bgmIntervalId) startBGM(0);
+        });
+    }
+
+    function adjustCameraLimits() {
+        if (!controls) return;
+        if (BOARD_WIDTH >= 6) {
+            controls.minDistance = 8;
+            controls.maxDistance = 36; 
+        } else if (BOARD_WIDTH === 4) {
+            controls.minDistance = 5;
+            controls.maxDistance = 24;
+        } else {
+            controls.minDistance = 6;
+            controls.maxDistance = 28;
+        }
+    }
+
+    function adjustCameraPosition() {
+        if (!camera) return;
+        if (BOARD_WIDTH >= 6) {
+            camera.position.set(0, 14.5, 21.0); 
+        } else if (BOARD_WIDTH === 4) {
+            camera.position.set(0, 8.5, 13.5);
+        } else {
+            camera.position.set(0, 10.0, 16.5);
+        }
+        if (controls) controls.target.set(0, 1, 0);
+    }
+
+    function rebuildRoomEnvironment() {
+        while(roomObjectsGroup.children.length > 0){
+            roomObjectsGroup.remove(roomObjectsGroup.children[0]);
+        }
+        cellTargets = [];
+
+        colors = roomThemes[selectedRoomType] || roomThemes.light_cyber;
+        scene.background = new THREE.Color(colors.bg);
+        scene.fog = new THREE.FogExp2(colors.bg, 0.012);
+
+        const ambientIntensity = colors.isDark ? 0.35 : 0.75;
+        const directIntensity = colors.isDark ? 0.45 : 0.60;
+
+        const ambiLight = new THREE.AmbientLight(0xffffff, ambientIntensity);
+        roomObjectsGroup.add(ambiLight);
+
+        const dirLight = new THREE.DirectionalLight(0xffffff, directIntensity);
+        dirLight.position.set(12, 22, 14);
+        dirLight.castShadow = true;
+        dirLight.shadow.mapSize.set(2048, 2048);
+        dirLight.shadow.bias = -0.0005;
+        dirLight.shadow.normalBias = 0.005;
+        roomObjectsGroup.add(dirLight);
+
+        const dist = 24.0; 
+
+        if (selectedRoomType === 'light_cyber') {
+            const floorGeo = new THREE.PlaneGeometry(90, 90); 
+            const floorMat = new THREE.MeshStandardMaterial({ color: 0xe2e8f0, roughness: 0.2, metalness: 0.1 });
+            const floor = new THREE.Mesh(floorGeo, floorMat);
+            floor.rotation.x = -Math.PI/2; floor.position.y = -0.5; floor.receiveShadow = true;
+            roomObjectsGroup.add(floor);
+
+            const gridHelper = new THREE.GridHelper(90, 45, 0x3b82f6, 0xcbd5e1);
+            gridHelper.position.y = -0.49; gridHelper.material.opacity = 0.3; gridHelper.material.transparent = true;
+            roomObjectsGroup.add(gridHelper);
+
+            const positions = [[dist, dist], [-dist, dist], [dist, -dist], [-dist, -dist]];
+            positions.forEach(([px, pz]) => {
+                const tower = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.5, 18, 16), new THREE.MeshStandardMaterial({ color: 0x94a3b8, roughness: 0.4 }));
+                tower.position.set(px, 8.5, pz); tower.castShadow = true; roomObjectsGroup.add(tower);
+                const glow = new THREE.PointLight(0x00d2ff, 1.5, 18); glow.position.set(px, 17, pz); roomObjectsGroup.add(glow);
+            });
+
+        } else if (selectedRoomType === 'light_study') {
+            const floorGroup = new THREE.Group();
+            for(let i = -25; i <= 25; i++) {
+                const wMat = new THREE.MeshStandardMaterial({ color: i % 2 === 0 ? 0xe6c29e : 0xdec0a3, roughness: 0.5 });
+                const plank = new THREE.Mesh(new THREE.PlaneGeometry(1.5, 80), wMat);
+                plank.rotation.x = -Math.PI/2; plank.position.set(i * 1.5, -0.5, 0); plank.receiveShadow = true;
+                floorGroup.add(plank);
+            }
+            roomObjectsGroup.add(floorGroup);
+
+            const corners = [[dist, -dist], [-dist, -dist], [dist, dist], [-dist, dist]];
+            corners.forEach(([cx, cz]) => {
+                const shelf = new THREE.Mesh(new THREE.BoxGeometry(6, 12, 2), new THREE.MeshStandardMaterial({ color: 0x8b4513, roughness: 0.7 }));
+                shelf.position.set(cx, 5.5, cz); shelf.castShadow = true; roomObjectsGroup.add(shelf);
+            });
+
+        } else if (selectedRoomType === 'dark_lab') {
+            const labMat = new THREE.MeshStandardMaterial({ color: 0x090d16, metalness: 0.7, roughness: 0.2 });
+            const floor = new THREE.Mesh(new THREE.PlaneGeometry(90, 90), labMat);
+            floor.rotation.x = -Math.PI/2; floor.position.y = -0.5; floor.receiveShadow = true;
+            roomObjectsGroup.add(floor);
+
+            const grid = new THREE.GridHelper(90, 45, 0x00d2ff, 0x1e293b);
+            grid.position.y = -0.48; grid.material.opacity = 0.4; grid.material.transparent = true;
+            roomObjectsGroup.add(grid);
+
+            for(let i=0; i<8; i++) {
+                const angle = (i / 8) * Math.PI * 2;
+                const rx = Math.cos(angle) * (dist + 2); const rz = Math.sin(angle) * (dist + 2);
+                const pillar = new THREE.Mesh(new THREE.CylinderGeometry(0.4, 0.4, 20, 16), new THREE.MeshStandardMaterial({ color: 0x334155, metalness: 0.8, roughness: 0.1 }));
+                pillar.position.set(rx, 9.5, rz); pillar.castShadow = true; roomObjectsGroup.add(pillar);
+                
+                const pLight = new THREE.PointLight(0x38bdf8, 2.0, 14);
+                pLight.position.set(rx * 0.9, 12, rz * 0.9); roomObjectsGroup.add(pLight);
+            }
+
+        } else if (selectedRoomType === 'dark_bar') {
+            const tileSize = 4.0;
+            const tileGroup = new THREE.Group();
+            for(let bx = -8; bx <= 8; bx++) {
+                for(let bz = -8; bz <= 8; bz++) {
+                    const isDark = (bx + bz) % 2 === 0;
+                    const tileMat = new THREE.MeshStandardMaterial({
+                        color: isDark ? 0x1c1917 : 0x292524, roughness: 0.3, metalness: 0.2
+                    });
+                    const tile = new THREE.Mesh(new THREE.BoxGeometry(tileSize - 0.05, 0.1, tileSize - 0.05), tileMat);
+                    tile.position.set(bx * tileSize, -0.55, bz * tileSize); tile.receiveShadow = true;
+                    tileGroup.add(tile);
+                }
+            }
+            roomObjectsGroup.add(tileGroup);
+
+            const wall = new THREE.Mesh(new THREE.BoxGeometry(60, 20, 1), new THREE.MeshStandardMaterial({ color: 0x1c1917, roughness: 0.8 }));
+            wall.position.set(0, 9.5, -dist); wall.receiveShadow = true; roomObjectsGroup.add(wall);
+
+            const bLight1 = new THREE.PointLight(0xd97706, 2.5, 25); bLight1.position.set(-12, 10, -dist + 4); roomObjectsGroup.add(bLight1);
+            const bLight2 = new THREE.PointLight(0xd97706, 2.5, 25); bLight2.position.set(12, 10, -dist + 4); roomObjectsGroup.add(bLight2);
+        }
+
+        buildBoard3D();
+        
+        if (isGameStarted) {
+            redrawExistingPieces();
+        } else {
+            generateTitleBackgroundPieces(); 
+        }
+    }
+
+    function buildBoard3D() {
+        const spacing = 1.9;
+        const totalSize = (BOARD_WIDTH - 1) * spacing + 2.8;
+        const boardGeo = new THREE.BoxGeometry(totalSize, 0.4, totalSize);
+        const boardMat = new THREE.MeshStandardMaterial({ color: colors.board, roughness: 0.4, metalness: 0.2 });
+        
+        if (boardMesh) roomObjectsGroup.remove(boardMesh);
+        boardMesh = new THREE.Mesh(boardGeo, boardMat);
+        boardMesh.position.y = -0.2; boardMesh.receiveShadow = true; boardMesh.castShadow = true;
+        roomObjectsGroup.add(boardMesh);
+
+        const startPos = -((BOARD_WIDTH - 1) * spacing) / 2;
+
+        for (let y = 0; y < BOARD_WIDTH; y++) {
+            for (let x = 0; x < BOARD_WIDTH; x++) {
+                const posX = startPos + x * spacing; const posZ = startPos + y * spacing;
+
+                const ringMesh = new THREE.Mesh(new THREE.TorusGeometry(0.64, 0.02, 8, 32), new THREE.MeshStandardMaterial({ color: colors.ring, roughness: 0.5 }));
+                ringMesh.rotation.x = Math.PI / 2; ringMesh.position.set(posX, 0.005, posZ);
+                roomObjectsGroup.add(ringMesh);
+
+                const targetMesh = new THREE.Mesh(new THREE.CylinderGeometry(0.72, 0.72, 0.2, 16), new THREE.MeshBasicMaterial({ visible: false }));
+                targetMesh.position.set(posX, 0.1, posZ); targetMesh.userData = { gridX: x, gridY: y };
+                roomObjectsGroup.add(targetMesh);
+                cellTargets.push(targetMesh);
+            }
+        }
+    }
+
+    function redrawExistingPieces() {
+        const spacing = 1.9;
+        const startPos = -((BOARD_WIDTH - 1) * spacing) / 2;
+
+        for (let y = 0; y < BOARD_WIDTH; y++) {
+            for (let x = 0; x < BOARD_WIDTH; x++) {
+                for (let z = 0; z < BOARD_HEIGHT; z++) {
+                    const p = board[y][x][z];
+                    if (p !== 0) {
+                        const mesh = createPieceMesh(p);
+                        mesh.position.set(startPos + x * spacing, z * 0.48 + 0.01, startPos + y * spacing);
+                        roomObjectsGroup.add(mesh);
+                        pieceMeshes[y][x][z] = mesh;
+                    }
+                }
+            }
+        }
+    }
+
+    function generateTitleBackgroundPieces() {
+        board = Array.from({length: BOARD_WIDTH}, () => Array.from({length: BOARD_WIDTH}, () => Array(BOARD_HEIGHT).fill(0)));
+        stackCounts = Array.from({length: BOARD_WIDTH}, () => Array(BOARD_WIDTH).fill(0));
+        pieceMeshes = Array.from({length: BOARD_WIDTH}, () => Array.from({length: BOARD_WIDTH}, () => Array(BOARD_HEIGHT).fill(null)));
+
+        const mid = Math.floor(BOARD_WIDTH / 2);
+        const demoPieces = [
+            {x: mid, y: mid, h: 3, p: 1}, {x: mid, y: mid-1, h: 2, p: 2}, {x: mid-1, y: mid, h: 1, p: 2},
+            {x: mid+1, y: mid, h: 1, p: 1}
+        ];
+        demoPieces.forEach(item => {
+            if (item.x >= 0 && item.x < BOARD_WIDTH && item.y >= 0 && item.y < BOARD_WIDTH) {
+                for(let z=0; z<item.h; z++) {
+                    board[item.y][item.x][z] = item.p; stackCounts[item.y][item.x]++;
+                    const mesh = createPieceMesh(item.p); const spacing = 1.9;
+                    const startPos = -((BOARD_WIDTH - 1) * spacing) / 2;
+                    mesh.position.set(startPos + item.x * spacing, z * 0.48 + 0.01, startPos + item.y * spacing);
+                    roomObjectsGroup.add(mesh); pieceMeshes[item.y][item.x][z] = mesh;
+                }
+            }
+        });
+    }
+
+    function createPieceMesh(player) {
+        const pGroup = new THREE.Group(); 
+        const radius = 0.68; const height = 0.48; const bevelSize = 0.05; 
+        const isWhite = (player === 1);
+        
+        const mat = new THREE.MeshStandardMaterial({
+            color: isWhite ? 0xf8fafc : 0x2d3748, 
+            roughness: isWhite ? 0.22 : 0.20,     
+            metalness: isWhite ? 0.15 : 0.60,     
+            emissive: 0x000000, emissiveIntensity: 0
+        });
+
+        const bodyH = height - (bevelSize * 2);
+        const body = new THREE.Mesh(new THREE.CylinderGeometry(radius, radius, bodyH, 32), mat);
+        body.position.y = height / 2; body.castShadow = true; body.receiveShadow = true;
+        pGroup.add(body);
+
+        const topCap = new THREE.Mesh(new THREE.CylinderGeometry(radius - bevelSize, radius, bevelSize, 32, 1), mat);
+        topCap.position.y = height - (bevelSize / 2); topCap.castShadow = true; topCap.receiveShadow = true;
+        pGroup.add(topCap);
+
+        const bottomCap = new THREE.Mesh(new THREE.CylinderGeometry(radius, radius - bevelSize, bevelSize, 32, 1), mat);
+        bottomCap.position.y = bevelSize / 2; bottomCap.castShadow = true; bottomCap.receiveShadow = true;
+        pGroup.add(bottomCap);
+
+        const ring = new THREE.Mesh(new THREE.TorusGeometry(radius - 0.10, 0.02, 8, 32), mat);
+        ring.rotation.x = Math.PI / 2; ring.position.y = height;
+        pGroup.add(ring); 
+
+        pGroup.userData = { material: mat, player: player };
+        return pGroup;
+    }
+
+    function spawnPiece3D(x, y, z, player) {
+        const mesh = createPieceMesh(player); const spacing = 1.9;
+        const startPos = -((BOARD_WIDTH - 1) * spacing) / 2;
+        const posX = startPos + x * spacing; const posZ = startPos + y * spacing;
+        const targetY = z * 0.48 + 0.01; const startY = targetY + 5.0;
+
+        mesh.position.set(posX, startY, posZ); roomObjectsGroup.add(mesh);
+        pieceMeshes[y][x][z] = mesh;
+
+        const animTime = 160; const startTime = performance.now();
+        function animateDrop(now) {
+            const elapsed = now - startTime; const progress = Math.min(elapsed / animTime, 1);
+            mesh.position.y = startY - (startY - targetY) * (progress * progress);
+            if (progress < 1) requestAnimationFrame(animateDrop); else mesh.position.y = targetY;
+        }
+        requestAnimationFrame(animateDrop);
+    }
+
+    const raycaster = new THREE.Raycaster(); const pointer = new THREE.Vector2();
+    let pDownX = 0, pDownY = 0;
+
+    function onPointerDown(event) {
+        if (!isGameStarted || isGameOver) return;
+        if (gameMode === 'vs-cpu' && currentPlayer !== playerColorAssignment) return;
+        pDownX = event.clientX; pDownY = event.clientY;
+        window.addEventListener('pointerup', onPointerUp);
+    }
+
+    function onPointerUp(event) {
+        window.removeEventListener('pointerup', onPointerUp);
+        if (Math.hypot(event.clientX - pDownX, event.clientY - pDownY) > 8) return;
+
+        const rect = renderer.domElement.getBoundingClientRect();
+        pointer.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+        pointer.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+
+        raycaster.setFromCamera(pointer, camera);
+        const intersects = raycaster.intersectObjects(cellTargets);
+
+        if (intersects.length > 0) {
+            const x = intersects[0].object.userData.gridX; const y = intersects[0].object.userData.gridY;
+            const z = stackCounts[y][x];
+            if (z < BOARD_HEIGHT) makeMove(x, y, z, currentPlayer);
+        }
+    }
+
+    function makeMove(x, y, z, player) {
+        board[y][x][z] = player; stackCounts[y][x]++;
+        playPlaceSound(); spawnPiece3D(x, y, z, player);
+
+        const wins = checkWinCondition();
+        if (wins.length > 0) { endGame(wins, player); return; }
+
+        if (stackCounts.every(r => r.every(c => c >= BOARD_HEIGHT))) {
+            isGameOver = true; document.getElementById('status').classList.add('hide-status');
+            showGameOverModal("DRAW", "draw"); return;
+        }
+
+        currentPlayer = currentPlayer === 1 ? 2 : 1; updateStatus();
+        
+        if (gameMode === 'vs-cpu' && currentPlayer !== playerColorAssignment) {
+            setTimeout(cpuTurn, 600);
+        }
+    }
+
+    const linesToCheck = [];
+    function precalculateLines() {
+        linesToCheck.length = 0; const dirs = [];
+        for (let dx = -1; dx <= 1; dx++) {
+            for (let dy = -1; dy <= 1; dy++) {
+                for (let dz = -1; dz <= 1; dz++) {
+                    if (dx === 0 && dy === 0 && dz === 0) continue;
+                    if (dz > 0 || (dz === 0 && dy > 0) || (dz === 0 && dy === 0 && dx > 0)) dirs.push({dx, dy, dz});
+                }
+            }
+        }
+        for (let x = 0; x < BOARD_WIDTH; x++) {
+            for (let y = 0; y < BOARD_WIDTH; y++) {
+                for (let z = 0; z < BOARD_HEIGHT; z++) {
+                    for (const {dx, dy, dz} of dirs) {
+                        let line = []; let valid = true;
+                        for (let i = 0; i < WIN_COUNT; i++) {
+                            let nx = x + dx * i, ny = y + dy * i, nz = z + dz * i;
+                            if (nx >= 0 && nx < BOARD_WIDTH && ny >= 0 && ny < BOARD_WIDTH && nz >= 0 && nz < BOARD_HEIGHT) {
+                                line.push({x: nx, y: ny, z: nz});
+                            } else { valid = false; break; }
+                        }
+                        if (valid) linesToCheck.push(line);
+                    }
+                }
+            }
+        }
+    }
+
+    function checkWinCondition() {
+        let wins = [];
+        for (const line of linesToCheck) {
+            const first = board[line[0].y][line[0].x][line[0].z];
+            if (first !== 0 && line.every(p => board[p.y][p.x][p.z] === first)) wins.push(line);
+        }
+        return wins;
+    }
+
+    function cpuTurn() {
+        if (isGameOver) return;
+        const myColor = (playerColorAssignment === 1) ? 2 : 1;
+        const enemyColor = playerColorAssignment;
+        
+        if (cpuLevel !== 'easy' || Math.random() > 0.20) {
+            let move = findImmediateMove(myColor);
+            if (move) { makeMove(move.x, move.y, move.z, myColor); return; }
+        }
+        
+        if (cpuLevel !== 'easy' || Math.random() > 0.35) {
+            let move = findImmediateMove(enemyColor);
+            if (move) { makeMove(move.x, move.y, move.z, myColor); return; }
+        }
+        
+        let move = evaluateStrategicMove3Patterns(myColor, enemyColor);
+        if (move) makeMove(move.x, move.y, move.z, myColor);
+    }
+
+    function findImmediateMove(player) {
+        for (const line of linesToCheck) {
+            let pCount = 0, eCount = 0, target = null;
+            for (const p of line) {
+                const val = board[p.y][p.x][p.z];
+                if (val === player) pCount++; else if (val === 0) { eCount++; target = p; }
+            }
+            if (pCount === (WIN_COUNT - 1) && eCount === 1 && target.z === stackCounts[target.y][target.x]) return target;
+        }
+        return null;
+    }
+
+    function evaluateStrategicMove3Patterns(myColor, enemyColor) {
+        let bestScore = -Infinity;
+        let bestMoves = [];
+        const centerOffset = (BOARD_WIDTH - 1) / 2;
+
+        for (let x = 0; x < BOARD_WIDTH; x++) {
+            for (let y = 0; y < BOARD_WIDTH; y++) {
+                const z = stackCounts[y][x];
+                if (z >= BOARD_HEIGHT) continue; 
+
+                let score = 0;
+                score += (BOARD_WIDTH - Math.abs(centerOffset - x) - Math.abs(centerOffset - y)) * 1.5;
+
+                for (const line of linesToCheck) {
+                    if (!line.some(p => p.x === x && p.y === y && p.z === z)) continue;
+
+                    let cpuCount = 0;
+                    let playerCount = 0;
+
+                    for (const p of line) {
+                        const val = board[p.y][p.x][p.z];
+                        if (val === myColor) cpuCount++;
+                        else if (val === enemyColor) playerCount++;
+                    }
+
+                    if (cpuLevel === 'hard') {
+                        if (playerCount === 2 && cpuCount === 0) score += 35;
+                        if (cpuCount === 2 && playerCount === 0) score += 50;
+                        if (cpuCount === 1 && playerCount === 0) score += 12;
+                    } else if (cpuLevel === 'normal') {
+                        if (playerCount === 2 && cpuCount === 0) score += 15;
+                        if (cpuCount === 2 && playerCount === 0) score += 25;
+                        if (cpuCount === 1 && playerCount === 0) score += 8;
+                    } else {
+                        if (cpuCount === 1 && playerCount === 0) score += 2;
+                    }
+                }
+
+                if (cpuLevel === 'hard' && (z + 1) < BOARD_HEIGHT) {
+                    board[y][x][z] = myColor; 
+                    stackCounts[y][x]++;
+                    let enemyWinNext = findImmediateMove(enemyColor);
+                    stackCounts[y][x]--; 
+                    board[y][x][z] = 0;
+                    
+                    if (enemyWinNext && enemyWinNext.x === x && enemyWinNext.y === y && enemyWinNext.z === (z + 1)) {
+                        score -= 300;
+                    }
+                }
+
+                if (cpuLevel === 'easy') {
+                    score += Math.random() * 40;
+                } else if (cpuLevel === 'normal') {
+                    score += Math.random() * 8;
+                } else {
+                    score += Math.random() * 2;
+                }
+
+                if (score > bestScore) {
+                    bestScore = score;
+                    bestMoves = [{x, y, z}];
+                } else if (score === bestScore) {
+                    bestMoves.push({x, y, z});
+                }
+            }
+        }
+        return bestMoves[Math.floor(Math.random() * bestMoves.length)];
+    }
+
+    function endGame(winningLines, winner) {
+        isGameOver = true; document.getElementById('status').classList.add('hide-status');
+        matchWinner = winner;
+        winningLines.forEach(line => line.forEach(p => {
+            const mesh = pieceMeshes[p.y][p.x][p.z];
+            if (mesh && !winningLinePieces.includes(mesh)) winningLinePieces.push(mesh);
+        }));
+
+        if (gameMode === 'vs-cpu') {
+            if (winner === playerColorAssignment) { 
+                showGameOverModal("WIN", "win"); playVictoryLayerSound(); 
+            } else { 
+                showGameOverModal("LOSE", "lose"); playDefeatLayerSound(); 
+            }
+        } else {
+            showGameOverModal(`P1 WIN`, "win");
+            if(winner === 2) {
+                document.getElementById('result-text').innerText = `P2 WIN`;
+            }
+            playVictoryLayerSound();
+        }
+    }
+
+    function showGameOverModal(title, typeClass) {
+        const actionBtn = document.getElementById('game-over-action-btn');
+        if (typeClass === 'win') {
+            actionBtn.innerText = "もう一度対戦する";
+        } else if (typeClass === 'lose') {
+            actionBtn.innerText = "もう一度挑戦する";
+        } else {
+            actionBtn.innerText = "もう一度対戦する";
+        }
+
+        document.getElementById('result-text').className = "result-title " + typeClass;
+        document.getElementById('result-text').innerText = title;
+        document.getElementById('game-over-overlay').classList.add('show');
+    }
+
+    function syncGameInfoBadge() {
+        const badge = document.getElementById('game-info-display-badge');
+        if (gameMode === 'vs-human') {
+            badge.innerText = `${BOARD_NAME} | 対人戦`;
+        } else {
+            let lvText = "普通";
+            if (cpuLevel === 'easy') lvText = "簡単";
+            if (cpuLevel === 'hard') lvText = "難しい";
+            let sideText = (playerColorAssignment === 1) ? "先攻" : "後攻";
+            badge.innerText = `${BOARD_NAME} | CPU (${lvText}・${sideText})`;
+        }
+    }
+
+    function startGameInstance() {
+        isGameStarted = true;
+        startBGM(Math.floor(Math.random() * 5) + 1);
+
+        if (gameMode === 'vs-cpu') {
+            playerColorAssignment = Math.random() < 0.5 ? 1 : 2;
+        } else {
+            playerColorAssignment = 1; 
+        }
+
+        syncGameInfoBadge();
+
+        document.getElementById('title-overlay').classList.add('hide');
+        document.getElementById('ui-container').classList.add('show');
+        document.getElementById('guide-tip').classList.add('show');
+        document.getElementById('status').classList.remove('hide-status');
+
+        document.getElementById('midgame-cpu-select').value = cpuLevel;
+        document.getElementById('midgame-difficulty-container').style.display = (gameMode === 'vs-cpu') ? 'block' : 'none';
+
+        controls.autoRotate = false;
+        adjustCameraLimits();
+        adjustCameraPosition();
+        
+        precalculateLines(); 
+
+        board = Array.from({length: BOARD_WIDTH}, () => Array.from({length: BOARD_WIDTH}, () => Array(BOARD_HEIGHT).fill(0)));
+        stackCounts = Array.from({length: BOARD_WIDTH}, () => Array(BOARD_WIDTH).fill(0));
+        pieceMeshes = Array.from({length: BOARD_WIDTH}, () => Array.from({length: BOARD_WIDTH}, () => Array(BOARD_HEIGHT).fill(null)));
+        
+        winningLinePieces = []; matchWinner = 0; currentPlayer = 1; isGameOver = false;
+        rebuildRoomEnvironment();
+        updateStatus();
+
+        if (gameMode === 'vs-cpu' && playerColorAssignment === 2) {
+            setTimeout(cpuTurn, 700);
+        }
+    }
+
+    function updateStatus() {
+        const el = document.getElementById('status'); if (isGameOver) return;
+        if (gameMode === 'vs-cpu') {
+            if (currentPlayer === playerColorAssignment) {
+                let colorName = (playerColorAssignment === 1) ? "白" : "黒";
+                el.innerText = `あなたの番です (${colorName})`;
+            } else {
+                let cpuColorName = (playerColorAssignment === 1) ? "黒" : "白";
+                el.innerText = `CPU思考中... (${cpuColorName})`;
+            }
+        } else {
+            el.innerText = `プレイヤー ${currentPlayer} の番 (${currentPlayer === 1 ? '白' : '黒'})`;
+        }
+    }
+
+    function animate() {
+        requestAnimationFrame(animate); if (controls) controls.update();
+
+        if (winningLinePieces.length > 0) {
+            const pulse = 0.5 + Math.sin(performance.now() * 0.006) * 0.3;
+            const targetColor = matchWinner === 1 ? colors.whiteGlow : colors.blackGlow;
+            winningLinePieces.forEach(g => {
+                if(g && g.userData.material) {
+                    g.userData.material.emissive.setHex(targetColor);
+                    g.userData.material.emissiveIntensity = pulse;
+                }
+            });
+        }
+        renderer.render(scene, camera);
+    }
+
+    function onWindowResize() {
+        camera.aspect = window.innerWidth / window.innerHeight; camera.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+    }
+
+    function switchPage(pageId) {
+        playClickSound();
+        document.querySelectorAll('.menu-page').forEach(p => p.classList.add('hide'));
+        document.getElementById(`page-${pageId}`).classList.remove('hide');
+    }
+
+    // --- 環境設定 ---
+    const optModal = document.getElementById('options-modal');
+    const bgmSlider = document.getElementById('bgm-slider'); const seSlider = document.getElementById('se-slider');
+    const bgmValLabel = document.getElementById('bgm-val'); const seValLabel = document.getElementById('se-val');
+    const roomSelect = document.getElementById('room-select');
+    const midgameCpuSelect = document.getElementById('midgame-cpu-select');
+
+    document.getElementById('title-opt-btn').addEventListener('click', () => { 
+        playClickSound(); 
+        document.getElementById('midgame-difficulty-container').style.display = 'none'; 
+        optModal.classList.add('show'); 
+    });
+    document.getElementById('game-opt-btn').addEventListener('click', () => { 
+        playClickSound(); 
+        optModal.classList.add('show'); 
+    });
+    document.getElementById('close-opt-btn').addEventListener('click', () => { playClickSound(); optModal.classList.remove('show'); });
+
+    bgmSlider.addEventListener('input', (e) => {
+        bgmValLabel.innerText = `${e.target.value}%`; audioParams.bgmMaster = e.target.value / 100; updateAudioGains();
+    });
+    seSlider.addEventListener('input', (e) => {
+        seValLabel.innerText = `${e.target.value}%`; audioParams.seMaster = e.target.value / 100;
+    });
+    seSlider.addEventListener('change', () => playClickSound());
+
+    roomSelect.addEventListener('change', (e) => {
+        playClickSound(); selectedRoomType = e.target.value; rebuildRoomEnvironment();
+    });
+
+    midgameCpuSelect.addEventListener('change', (e) => {
+        playClickSound();
+        cpuLevel = e.target.value;
+        document.querySelectorAll('.lv-btn').forEach(b => {
+            if (b.getAttribute('data-lv') === cpuLevel) b.classList.add('selected');
+            else b.classList.remove('selected');
+        });
+        syncGameInfoBadge();
+        updateStatus();
+    });
+
+    // --- ボタンハンドラ・ページ遷移群 ---
+    document.getElementById('to-board-btn').addEventListener('click', () => { switchPage('board'); });
+    document.getElementById('back-to-main').addEventListener('click', () => switchPage('main'));
+    document.getElementById('back-to-board').addEventListener('click', () => switchPage('board'));
+    document.getElementById('back-to-mode').addEventListener('click', () => switchPage('mode'));
+
+    document.querySelectorAll('.board-select-btn').forEach(btn => {
+        btn.onclick = function(e) {
+            playClickSound();
+            document.querySelectorAll('.board-select-btn').forEach(b => b.classList.remove('selected'));
+            const target = e.currentTarget;
+            target.classList.add('selected');
+            
+            BOARD_WIDTH = parseInt(target.getAttribute('data-width'));
+            BOARD_HEIGHT = parseInt(target.getAttribute('data-height'));
+            BOARD_NAME = target.getAttribute('data-name');
+            
+            adjustCameraLimits();
+            adjustCameraPosition();
+            precalculateLines();
+            rebuildRoomEnvironment();
+        };
+    });
+
+    document.getElementById('board-select-confirm-btn').addEventListener('click', () => {
+        playClickSound();
+        document.getElementById('selected-board-label').innerText = `選択中: ${BOARD_NAME}`;
+        switchPage('mode');
+    });
+
+    document.getElementById('mode-1p-btn').onclick = function() { gameMode = 'vs-cpu'; switchPage('diff'); };
+    document.getElementById('mode-2p-btn').onclick = function() { gameMode = 'vs-human'; startGameInstance(); };
+
+    document.querySelectorAll('.lv-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            playClickSound(); document.querySelectorAll('.lv-btn').forEach(b => b.classList.remove('selected'));
+            e.target.classList.add('selected'); cpuLevel = e.target.getAttribute('data-lv');
+        });
+    });
+
+    document.getElementById('start-cpu-game-btn').addEventListener('click', startGameInstance);
+    document.getElementById('restart-btn').addEventListener('click', () => { playClickSound(); startGameInstance(); });
+    
+    document.getElementById('game-over-action-btn').addEventListener('click', () => {
+        playClickSound();
+        document.getElementById('game-over-overlay').classList.remove('show');
+        startGameInstance();
+    });
+
+    document.getElementById('view-board-btn').addEventListener('click', () => { playClickSound(); document.getElementById('game-over-overlay').classList.remove('show'); });
+
+    document.getElementById('home-btn').addEventListener('click', () => {
+        playClickSound(); isGameStarted = false;
+        document.getElementById('title-overlay').classList.remove('hide');
+        document.getElementById('ui-container').classList.remove('show');
+        document.getElementById('guide-tip').classList.remove('show');
+        switchPage('main'); 
+        controls.autoRotate = true; controls.autoRotateSpeed = 1.2;
+        adjustCameraLimits();
+        adjustCameraPosition();
+        rebuildRoomEnvironment(); startBGM(0);
+    });
+
+    precalculateLines(); init3D(); animate();
+</script>
+</body>
+</html>
