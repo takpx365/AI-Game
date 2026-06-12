@@ -11,6 +11,9 @@
             background-color: #f1f5f9; 
             overflow: hidden; user-select: none; -webkit-user-select: none;
             color: #1e293b;
+            /* iOSでのスクロールバウンスを禁止し、タップの反応性を極限まで高める */
+            touch-action: none;
+            -webkit-tap-highlight-color: transparent;
         }
 
         /* --- タイトル＆ナビゲーションオーバーレイ --- */
@@ -20,6 +23,8 @@
             z-index: 200; display: flex; flex-direction: column; justify-content: space-between;
             align-items: center; padding: 40px 20px; box-sizing: border-box;
             transition: opacity 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            /* オーバーレイ上でのジェスチャー誤動作を防止 */
+            touch-action: none;
         }
         #title-overlay.hide { opacity: 0; pointer-events: none; }
 
@@ -45,6 +50,7 @@
 
         .cylinder-btn {
             position: relative; width: 280px; height: 50px; border: none; background: none; cursor: pointer; outline: none; transition: transform 0.2s;
+            touch-action: manipulation;
         }
         .cylinder-btn:active { transform: scale(0.96); }
         .cylinder-top {
@@ -161,6 +167,7 @@
             background: rgba(15, 23, 42, 0.4); z-index: 300;
             display: flex; justify-content: center; align-items: center;
             opacity: 0; pointer-events: none; transition: opacity 0.3s ease;
+            touch-action: none;
         }
         .modal-overlay.show { opacity: 1; pointer-events: auto; }
         
@@ -422,14 +429,22 @@
     let colors = roomThemes.light_cyber;
 
     let audioParams = { bgmMaster: 0.7, seMaster: 0.7 };
-    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    
+    // iOS対策: グローバルでの固定初期化を廃止し、クリック時に動的生成/再開する設計へ変更
+    let audioCtx = null;
     let bgmIntervalId = null;
     let bgmGainNode = null;
     let currentBgmTrack = 0;
 
-    // カノン進行 (Cメジャー基準: C - G - Am - Em - F - C - F - G) の各和音構成周波数テーブル
-    // 0: C (C3, E3, G3, C4)  | 1: G (G2, B3, D4, G4)  | 2: Am (A2, C3, E3, A3) | 3: Em (E2, G3, B3, E4)
-    // 4: F (F2, A3, C4, F4)  | 5: C (C3, E3, G3, C4)  | 6: F (F2, A3, C4, F4)  | 7: G (G2, B3, D4, G4)
+    function initAudio() {
+        if (!audioCtx) {
+            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        }
+        if (audioCtx && audioCtx.state === 'suspended') {
+            audioCtx.resume();
+        }
+    }
+
     const canonChords = [
         { base: 130.81, chord: [130.81, 164.81, 196.00, 261.63] }, // C
         { base: 97.99,  chord: [196.00, 246.94, 293.66, 392.00] }, // G
@@ -441,7 +456,6 @@
         { base: 97.99,  chord: [196.00, 246.94, 293.66, 392.00] }  // G
     ];
 
-    // 各トラックごとの演奏スタイル・テンポ設定
     const tracksConfig = [
         { bpm: 75,  prob: 0.30, type: 'sine',     release: 0.6, label: 'タイトル（穏やかなカノンアンビエント）' },
         { bpm: 140, prob: 0.45, type: 'sine',     release: 0.2, label: 'バトル1（標準テンポ・クリア）' },      
@@ -452,7 +466,7 @@
     ];
 
     function updateAudioGains() {
-        if (bgmGainNode) {
+        if (audioCtx && bgmGainNode) {
             let targetVol = (currentBgmTrack === 0) ? 0.60 : 0.45;
             bgmGainNode.gain.setValueAtTime(targetVol * audioParams.bgmMaster, audioCtx.currentTime);
         }
@@ -460,8 +474,10 @@
 
     function startBGM(trackIndex) {
         stopBGM();
+        initAudio();
+        if (!audioCtx) return;
+
         try {
-            if (audioCtx.state === 'suspended') audioCtx.resume();
             currentBgmTrack = trackIndex;
             bgmGainNode = audioCtx.createGain();
             updateAudioGains();
@@ -469,22 +485,19 @@
 
             let step = 0;
             let cfg = tracksConfig[trackIndex] || tracksConfig[0];
-            // 8拍（カノン進行1巡）＝ 16ステップ（半拍ごと）
             let intervalTime = Math.round(60000 / cfg.bpm / 2); 
 
             bgmIntervalId = setInterval(() => {
+                if (!audioCtx) return;
                 const now = audioCtx.currentTime;
-                // 現在の進行位置 (0〜7のコードインデックス)
                 const chordIdx = Math.floor(step / 2) % 8;
                 const currentChord = canonChords[chordIdx];
 
-                // --- ベース音・ルート伴奏（1拍の表でトリガー） ---
                 if (step % 2 === 0) {
                     const oscBase = audioCtx.createOscillator();
                     const gainBase = audioCtx.createGain();
                     oscBase.type = 'triangle';
                     
-                    // トラック0（タイトル）はより低いベース、ゲーム中は適度な低音
                     let baseFreq = currentBgmTrack === 0 ? currentChord.base : currentChord.base * 2;
                     oscBase.frequency.setValueAtTime(baseFreq, now);
                     
@@ -497,13 +510,11 @@
                     oscBase.stop(now + (intervalTime * 2 / 1000));
                 }
 
-                // --- メロディ・アルペジオ（ランダムあるいはステップ連動） ---
                 if (Math.random() > (1 - cfg.prob)) {
                     const oscMel = audioCtx.createOscillator();
                     const gainMel = audioCtx.createGain();
                     oscMel.type = cfg.type;
                     
-                    // 現在のコード構成音からランダムに、1〜2オクターブ上でメロディを紡ぐ
                     const chordNotes = currentChord.chord;
                     let randomNote = chordNotes[Math.floor(Math.random() * chordNotes.length)];
                     let octaveShift = Math.random() > 0.6 ? 2.0 : 1.0;
@@ -530,8 +541,9 @@
 
     async function playVictoryLayerSound() {
         if (audioParams.seMaster === 0) return;
+        initAudio();
+        if (!audioCtx) return;
         try {
-            if (audioCtx.state === 'suspended') await audioCtx.resume();
             const now = audioCtx.currentTime;
             const synthGain = audioCtx.createGain();
             synthGain.gain.setValueAtTime(0.45 * audioParams.seMaster, now);
@@ -553,8 +565,9 @@
 
     async function playDefeatLayerSound() {
         if (audioParams.seMaster === 0) return;
+        initAudio();
+        if (!audioCtx) return;
         try {
-            if (audioCtx.state === 'suspended') await audioCtx.resume();
             const now = audioCtx.currentTime;
             const masterGain = audioCtx.createGain();
             masterGain.gain.setValueAtTime(0.6 * audioParams.seMaster, now);
@@ -600,8 +613,9 @@
     
     function playClickSound() {
         if (audioParams.seMaster === 0) return;
+        initAudio();
+        if (!audioCtx) return;
         try {
-            if (audioCtx.state === 'suspended') audioCtx.resume();
             const now = audioCtx.currentTime;
             const osc = audioCtx.createOscillator(); const gainNode = audioCtx.createGain();
             osc.type = 'sine'; osc.frequency.setValueAtTime(650, now); osc.frequency.setValueAtTime(950, now + 0.04); 
@@ -613,6 +627,8 @@
     
     function playPlaceSound() {
         if (audioParams.seMaster === 0) return;
+        initAudio();
+        if (!audioCtx) return;
         try {
             const now = audioCtx.currentTime;
             const osc = audioCtx.createOscillator(); const oscGain = audioCtx.createGain();
@@ -651,8 +667,12 @@
         window.addEventListener('resize', onWindowResize);
         renderer.domElement.addEventListener('pointerdown', onPointerDown);
 
-        document.body.addEventListener('pointerdown', () => {
-            if(!isGameStarted && !bgmIntervalId) startBGM(0);
+        // iOS対策: pointerdownから確実なclickイベントトリガーに変更
+        document.body.addEventListener('click', () => {
+            if(!isGameStarted && !bgmIntervalId) {
+                initAudio();
+                startBGM(0);
+            }
         });
     }
 
@@ -1142,7 +1162,7 @@
     function syncGameInfoBadge() {
         const badge = document.getElementById('game-info-display-badge');
         if (gameMode === 'vs-human') {
-            badge.innerText = `${BOARD_NAME} | 対人戦`;
+            badge.innerText = `${BOARD_NAME} | 对人戦`;
         } else {
             let lvText = "普通";
             if (cpuLevel === 'easy') lvText = "簡単";
@@ -1154,6 +1174,8 @@
 
     function startGameInstance() {
         isGameStarted = true;
+        // iOS対策: ユーザーインタラクションのイベントツリー上で確実に再生開始
+        initAudio();
         startBGM(Math.floor(Math.random() * 5) + 1);
 
         if (gameMode === 'vs-cpu') {
