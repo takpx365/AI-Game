@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>GAMEポータル</title>
+    
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    
+    <style>
+        :root {
+            --bg-color: #121214;
+            --card-bg: #1e1e24;
+            --text-color: #ffffff;
+            --accent-blue: #4d94ff;
+            --accent-orange: #ff944d;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            box-sizing: border-box;
+        }
+
+        h1 {
+            font-size: 24px;
+            margin-bottom: 5px;
+            letter-spacing: 2px;
+            text-align: center;
+            background: linear-gradient(45deg, #ff7b00, #0088ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .subtitle {
+            font-size: 14px;
+            color: #888;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        .menu-container {
+            width: 100%;
+            max-width: 400px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .game-card {
+            background-color: var(--card-bg);
+            border-radius: 16px;
+            padding: 20px;
+            text-decoration: none;
+            color: var(--text-color);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            transition: transform 0.2s, box-shadow 0.2s;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .game-card:active {
+            transform: scale(0.98);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+        }
+
+        .game-info {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .game-title {
+            font-size: 18px;
+            font-weight: bold;
+        }
+
+        .game-desc {
+            font-size: 12px;
+            color: #aaa;
+        }
+
+        /* ゲームごとのアクセントカラー（左側のワンポイント線） */
+        .game-card.3d-shanghai {
+            border-left: 5px solid var(--accent-orange);
+        }
+        .game-card.color-sort {
+            border-left: 5px solid var(--accent-blue);
+        }
+
+        .play-btn {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+            color: #fff;
+        }
+
+        .footer {
+            margin-top: 40px;
+            font-size: 11px;
+            color: #555;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>MY HTML GAMES</h1>
+    <div class="subtitle">ミニゲームコレクション</div>
+
+    <div class="menu-container">
+        <a href="QuatroSphere.html" class="game-card 3d-shanghai">
+            <div class="game-info">
+                <div class="game-title">立体四目並べ</div>
+                <div class="game-desc">4×4×4の空間で戦う頭脳戦ゲーム</div>
+            </div>
+            <div class="play-btn">PLAY</div>
+        </a>
+
+        <a href="COLORSORT2D.html" class="game-card color-sort">
+            <div class="game-info">
+                <div class="game-title">COLOR SORT 2D</div>
+                <div class="game-desc">色を綺麗に並べ替えるパズルゲーム</div>
+            </div>
+            <div class="play-btn">PLAY</div>
+        </a>
+    </div>
+
+    <div class="footer">
+        iPhoneのSafariで開き「ホーム画面に追加」すると<br>アプリのように全画面で遊べます。
+    </div>
+
+</body>
+</html>
